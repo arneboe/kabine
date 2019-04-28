@@ -65,3 +65,22 @@ class Camera:
         self.user_preview_callback(Image.open(io.BytesIO(file_data)))
 
 
+    def print_config(self):
+        config = gp.check_result(gp.gp_camera_get_config(self.camera))
+
+        self.print_config_recursive(config, 0)
+
+
+    def print_config_recursive(self, config, level):
+
+        for child in gp.check_result(gp.gp_widget_get_children(config)):
+            label = gp.check_result(gp.gp_widget_get_label(child))
+            name = gp.check_result(gp.gp_widget_get_name(child))
+            child_type = gp.check_result(gp.gp_widget_get_type(child))
+            text = '{}: {} ({})'.format(child_type, label, name)
+
+            for i in range(level):
+                text = "  " + text
+
+            print(text)
+            self.print_config_recursive(child, level  + 1)
