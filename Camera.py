@@ -15,8 +15,7 @@ class Camera:
         gp.check_result(gp.use_python_logging())
         self.camera = gp.check_result(gp.gp_camera_new())
         self.run_thread = False
-        self.preview_callback = preview_callback
-        self.preview_thread = threading.Thread(target=self._get_preview)
+        self.user_preview_callback = preview_callback
         gp.check_result(gp.gp_camera_init(self.camera))
 
     def __del__(self):
@@ -33,14 +32,10 @@ class Camera:
 
     def _get_preview(self):
         while self.run_thread:
-         #   print('Capturing preview image')
             camera_file = gp.check_result(gp.gp_camera_capture_preview(self.camera))
             file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
             data = memoryview(file_data)
-        #    print(type(data), len(data))
-        #    print(data[:10].tolist())
-            self.preview_callback(Image.open(io.BytesIO(file_data)))
-
+            self.user_preview_callback(Image.open(io.BytesIO(file_data)))
 
     def start_preview(self):
         '''
@@ -48,6 +43,7 @@ class Camera:
         :return:
         '''
         self.run_thread = True
+        self.preview_thread = threading.Thread(target=self._get_preview)
         self.preview_thread.start()
 
     def stop_preview(self):
@@ -57,4 +53,5 @@ class Camera:
         '''
         self.run_thread = False
         self.preview_thread.join()
+
 

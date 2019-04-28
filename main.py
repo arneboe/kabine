@@ -1,40 +1,56 @@
+import sys
 
-#!/usr/bin/env python
+from PIL import Image, ImageQt
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout
+from PyQt5.QtGui import QIcon, QPixmap
 
-# python-gphoto2 - Python interface to libgphoto2
-# http://github.com/jim-easterbrook/python-gphoto2
-# Copyright (C) 2015-17  Jim Easterbrook  jim@jim-easterbrook.me.uk
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import logging
-import time
 from Camera import Camera
+from functools import partial
+
+class App(QWidget):
+
+    def __init__(self):
+        super().__init__()
+        self.camera = Camera(partial(App.preview_image_updated, self))
+        self.width = 640
+        self.height = 480
+
+        self.start_preview_button = QPushButton('Start Preview', self)
+        self.stop_preview_button = QPushButton('Stop Preview', self)
+
+        self.start_preview_button.clicked.connect(self.start_preview_clicked)
+        self.stop_preview_button.clicked.connect(self.stop_preview_clicked)
+
+        self.label = QLabel(self)
+        self.label.setScaledContents(True)
+        pixmap = QPixmap(800, 800)
+        self.label.setPixmap(pixmap)
+        layout = QVBoxLayout(self)
+
+        layout.addWidget(self.label)
+        layout.addWidget(self.start_preview_button)
+        layout.addWidget(self.stop_preview_button)
+        self.setLayout(layout)
 
 
-def preview_callback(image):
-    print("got image")
+        self.show()
 
 
-from PIL import Image
+    def start_preview_clicked(self):
+        self.camera.start_preview()
 
-logging.basicConfig(
-    format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
+    def stop_preview_clicked(self):
+        self.camera.stop_preview()
 
 
-cam = Camera(preview_callback=preview_callback)
+    def preview_image_updated(self, image: Image):
+        image_qt = ImageQt.ImageQt(image)
+        self.label.setPixmap(QPixmap.fromImage(image_qt))
+        print("got img")
 
-cam.start_preview()
 
-time.sleep(10)
-cam.stop_preview()
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = App()
+    app.exec()
+
