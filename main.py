@@ -17,12 +17,13 @@ class App(QWidget):
 
         self.start_preview_button = QPushButton('Start Preview', self)
         self.stop_preview_button = QPushButton('Stop Preview', self)
+        self.take_picture_button = QPushButton('Take Picture', self)
 
         self.start_preview_button.clicked.connect(self.start_preview_clicked)
         self.stop_preview_button.clicked.connect(self.stop_preview_clicked)
+        self.take_picture_button.clicked.connect(self.take_picture_clicked)
 
         self.label = QLabel(self)
-        self.label.setScaledContents(True)
         pixmap = QPixmap(800, 800)
         self.label.setPixmap(pixmap)
         layout = QVBoxLayout(self)
@@ -30,6 +31,7 @@ class App(QWidget):
         layout.addWidget(self.label)
         layout.addWidget(self.start_preview_button)
         layout.addWidget(self.stop_preview_button)
+        layout.addWidget(self.take_picture_button)
         self.setLayout(layout)
 
 
@@ -42,10 +44,14 @@ class App(QWidget):
     def stop_preview_clicked(self):
         self.camera.stop_preview()
 
+    def take_picture_clicked(self):
+        self.camera.take_picture()
+
 
     def preview_image_updated(self, image: Image):
         image_qt = ImageQt.ImageQt(image)
-        self.label.setPixmap(QPixmap.fromImage(image_qt))
+        pixmap = QPixmap.fromImage(image_qt)
+        self.label.setPixmap(pixmap.scaledToWidth(800))
         print("got img")
 
 

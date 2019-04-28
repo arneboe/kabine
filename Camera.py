@@ -34,7 +34,6 @@ class Camera:
         while self.run_thread:
             camera_file = gp.check_result(gp.gp_camera_capture_preview(self.camera))
             file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
-            data = memoryview(file_data)
             self.user_preview_callback(Image.open(io.BytesIO(file_data)))
 
     def start_preview(self):
@@ -51,7 +50,18 @@ class Camera:
         Stop the preview streaming
         :return:
         '''
-        self.run_thread = False
-        self.preview_thread.join()
+        if self.run_thread:
+            self.run_thread = False
+            self.preview_thread.join()
+
+    def take_picture(self):
+        self.stop_preview()
+        file_path = gp.check_result(gp.gp_camera_capture(self.camera, gp.GP_CAPTURE_IMAGE))
+        print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+        camera_file = gp.check_result(gp.gp_camera_file_get(self.camera, file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL))
+        file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
+        gp.check_result(gp.gp_camera_file_delete(self.camera, file_path.folder, file_path.name))
+
+        self.user_preview_callback(Image.open(io.BytesIO(file_data)))
 
 
