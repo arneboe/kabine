@@ -11,7 +11,7 @@ class App(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.camera = Camera(partial(App.preview_image_updated, self))
+        self.camera = Camera(partial(App.preview_image_updated, self), partial(App.image_updated, self))
         self.width = 640
         self.height = 480
 
@@ -37,9 +37,7 @@ class App(QWidget):
         layout.addWidget(self.config_button)
         self.setLayout(layout)
 
-
         self.show()
-
 
     def config_clicked(self):
         self.camera.print_config()
@@ -53,12 +51,17 @@ class App(QWidget):
     def take_picture_clicked(self):
         self.camera.take_picture()
 
-
     def preview_image_updated(self, image: Image):
         image_qt = ImageQt.ImageQt(image)
         pixmap = QPixmap.fromImage(image_qt)
         self.label.setPixmap(pixmap.scaledToWidth(800))
         print("got img")
+
+    def image_updated(self, image: Image):
+        image_qt = ImageQt.ImageQt(image)
+        pixmap = QPixmap.fromImage(image_qt)
+        self.label.setPixmap(pixmap.scaledToWidth(800))
+        print("got readl img")
 
 
 if __name__ == '__main__':
