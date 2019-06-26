@@ -12,6 +12,9 @@ class Iso(Enum):
     ISO_800 = "800"
     ISO_1600 = "1600"
 
+    def __str__(self):
+        return '%s' % self.name
+
 
 class WhiteBalance(Enum):
     WB_AUTO = "0"
@@ -22,6 +25,9 @@ class WhiteBalance(Enum):
     WB_NEON_2 = "5"
     WB_FLASH = "6"
     WB_MANUAL = "7" #TODO triggers manual wb, how does that work.
+
+    def __str__(self):
+        return '%s' % self.name
 
 class Aperature(Enum):
     AP_IMPLICIT_AUTO = "implicit auto"
@@ -74,6 +80,9 @@ class Aperature(Enum):
     AP_81 = "81"
     AP_91 = "91"
 
+    def __str__(self):
+        return '%s' % self.name
+
 
 class ShootingMode(Enum):
     AUTO = "Auto"
@@ -82,28 +91,117 @@ class ShootingMode(Enum):
     MANUAL = "Manual"
 
 
+class ShutterSpeed(Enum):
+    SS_auto = "auto"
+    SS_bulb = "bulb"
+    SS_30 = "30"
+    SS_25 = "25"
+    SS_20 = "20"
+    SS_15 = "15"
+    SS_13 = "13"
+    SS_10 = "10"
+    SS_8 = "8"
+    SS_6 = "6"
+    SS_5 = "5"
+    SS_4 = "4"
+    SS_3_2 = "3.2"
+    SS_3 = "3"
+    SS_2_5 = "2.5"
+    SS_2 = "2"
+    SS_1_6 = "1.6"
+    SS_1_5 = "1.5"
+    SS_1_3 = "1.3"
+    SS_1 = "1"
+    SS_0_8 = "0.8"
+    SS_0_7 = "0.7"
+    SS_0_6 = "0.6"
+    SS_0_5 = "0.5"
+    SS_0_4 = "0.4"
+    SS_0_3 = "0.3"
+    SS_1__4 = "1/4"
+    SS_1__5 = "1/5"
+    SS_1__6 = "1/6"
+    SS_1__8 = "1/8"
+    SS_1__10 = "1/10"
+    SS_1__13 = "1/13"
+    SS_1__15 = "1/15"
+    SS_1__20 = "1/20"
+    SS_1__25 = "1/25"
+    SS_1__30 = "1/30"
+    SS_1__40 = "1/40"
+    SS_1__45 = "1/45"
+    SS_1__50 = "1/50"
+    SS_1__60 = "1/60"
+    SS_1__80 = "1/80"
+    SS_1__90 = "1/90"
+    SS_1__100 = "1/100"
+    SS_1__125 = "1/125"
+    SS_1__160 = "1/160"
+    SS_1__180 = "1/180"
+    SS_1__200 = "1/200"
+    SS_1__250 = "1/250"
+    SS_1__320 = "1/320"
+    SS_1__350 = "1/350"
+    SS_1__400 = "1/400"
+    SS_1__500 = "1/500"
+    SS_1__640 = "1/640"
+    SS_1__750 = "1/750"
+    SS_1__800 = "1/800"
+    SS_1__1000 = "1/1000"
+    SS_1__1250 = "1/1250"
+    SS_1__1500 = "1/1500"
+    SS_1__1600 = "1/1600"
+    SS_1__2000 = "1/2000"
+    SS_1__2500 = "1/2500"
+    SS_1__3000 = "1/3000"
+    SS_1__3200 = "1/3200"
+    SS_1__4000 = "1/4000"
+    SS_1__5000 = "1/5000"
+    SS_1__6000 = "1/6000"
+    SS_1__6400 = "1/6400"
+    SS_1__8000 = "1/8000"
+
+    def __str__(self):
+        return '%s' % self.name
+
 class Configuration:
 
     def __init__(self, camera):
         self.camera = camera
         self.config = gp.check_result(gp.gp_camera_get_config(self.camera))
 
+        #note in av mode shutter speed is ignored!
         self.set_shootingmode(ShootingMode.AV) #needs to be done first, otherwise some settings are read only
         self.set_zoom(0)
         #self.print_config()
         self.set_iso(Iso.ISO_100)
         self.set_white_balance(WhiteBalance.WB_AUTO)
-        self.set_aperture(Aperature.AP_7_1)
+        self.set_aperture(Aperature.AP_AUTO)
+        self.set_shutter_speed(ShutterSpeed.SS_auto)
+
+
+    def set_shutter_speed(self, ss : ShutterSpeed):
+        speed_widget = self.find_config_widget_by_name("shutterspeed")
+        if speed_widget.get_readonly():
+            print("shutter speed READ ONLY")
+            return
+        speed_widget.set_value(ss.value)
+        self.camera.set_config(self.config)
 
     def set_shootingmode(self, mode: ShootingMode):
         mode_widget = self.find_config_widget_by_name("shootingmode")
         mode_widget.set_value(mode.value)
         self.camera.set_config(self.config)
 
+    def get_zoom_range(self):
+        zoom_widget = self.find_config_widget_by_name("zoom")
+        lo, hi, inc = zoom_widget.get_range()
+        return lo, hi
 
     def set_zoom(self, zoom):
         zoom_widget = self.find_config_widget_by_name("zoom")
         lo, hi, inc = zoom_widget.get_range()
+
         zoom_widget.set_value(self.__clamp(zoom, lo, hi))
         self.camera.set_config(self.config)
 
@@ -121,7 +219,7 @@ class Configuration:
         #FIXME aperature seems to be read only for this camera model
         ap_widget = self.find_config_widget_by_name("aperture")
         if ap_widget.get_readonly():
-            print("READ ONLY")
+            print("Aperature READ ONLY")
             return
         ap_widget.set_value(aperture.value)
         self.camera.set_config(self.config)
