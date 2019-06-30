@@ -6,7 +6,7 @@ from PIL import Image, ImageQt
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QSpinBox, QHBoxLayout, QComboBox, \
     QGraphicsView
 from PyQt5.QtGui import QIcon, QPixmap, QFont, QPainter, QColor
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from Configuration import Iso, WhiteBalance, Aperature, ShutterSpeed
 
 from Camera import Camera
@@ -24,10 +24,16 @@ class App(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.camera = Camera(partial(App.preview_image_updated, self), partial(App.image_updated, self))
+        self.camera = Camera()
+        self.camera.picture_received.connect(self.picture_received)
+        self.camera.preview_received.connect(self.preview_received)
 
+        self.deleteTimer = QTimer()
+        self.deleteTimer.setInterval(1000)
+        self.deleteTimer.timeout.connect(self.delete_timer_tick)
+        self.deleteTimer.setSingleShot(False)
 
-        self.graphic = QGraphicsView()
+        self.deleteCounter = 0
 
         self.label = QLabel(self)
         layout = QVBoxLayout(self)
@@ -39,27 +45,32 @@ class App(QWidget):
         buttonFont.setPointSize(30)
 
         buttonLayout = QHBoxLayout()
+        buttonLayout.setAlignment(Qt.AlignHCenter)
+        buttonLayout.setSpacing(200)
 
 
-        printButton = QLabel("Print")
-        printButton.setFont(buttonFont)
-        buttonLayout.addWidget(printButton)
+        self.takePicButton = QLabel("Take Picture")
+        self.takePicButton.setFont(buttonFont)
+        buttonLayout.addWidget(self.takePicButton)
 
-        printAndDel = QLabel("Print & Delete")
-        printAndDel.setFont(buttonFont)
+        self.printAndDelButton = QLabel("Print & Delete Picture")
+        self.printAndDelButton.setFont(buttonFont)
+        self.printAndDelButton.setEnabled(False)
 
-        buttonLayout.addWidget(printAndDel)
 
-        delete = QLabel("Delete")
-        delete.setFont(buttonFont)
-        buttonLayout.addWidget(delete)
+        buttonLayout.addWidget(self.printAndDelButton)
+
+        self.deleteButton = QLabel("Delete Picture")
+        self.deleteButton.setFont(buttonFont)
+        self.deleteButton.setEnabled(False)
+        buttonLayout.addWidget(self.deleteButton)
 
         layout.addLayout(buttonLayout)
         self.setLayout(layout)
 
         self.showFullScreen()
 
-        self.imageHeight = QApplication.desktop().screenGeometry().height() - delete.height() - 30
+        self.imageHeight = QApplication.desktop().screenGeometry().height() - self.deleteButton.height() - 70
         print(self.imageHeight)
         self.state = AppState.INIT
         self.start_preview()
@@ -87,19 +98,24 @@ class App(QWidget):
     def start_preview(self):
         if self.state == AppState.INIT or self.state == AppState.PICTURE_SHOWING:
             self.camera.start_preview()
+            self.deleteTimer.stop()
+            self.deleteButton.setEnabled(False)
+            self.printAndDelButton.setEnabled(False)
+            self.takePicButton.setEnabled(True)
             self.state = AppState.PRVIEW_SHOWING
         else:
             print("start Preview, illegal state", self.state)
 
     def print_pressed(self):
         if self.state == AppState.PICTURE_SHOWING:
+            self.deleteTimer.stop()
             self.start_preview()
 
 
     def delete_pressed(self):
         if self.state == AppState.PICTURE_SHOWING:
+            self.deleteTimer.stop()
             self.start_preview()
-
 
     def clear_picture(self):
         pixmap = QPixmap(self.label.pixmap().width(), self.imageHeight)
@@ -110,27 +126,43 @@ class App(QWidget):
 
     def take_picture_pressed(self):
         self.state = AppState.WAITING_FOR_PICTURE
-        self.camera.stop_preview()
+        self.deleteTimer.stop()
         self.clear_picture()
-
-        #do in background to not block gui
-        t = threading.Thread(target=self.take_picture_thread)
-        t.start()
-
-    def take_picture_thread(self):
         self.camera.take_picture()
 
-    def preview_image_updated(self, image: Image):
-        image_qt = ImageQt.ImageQt(image)
-        pixmap = QPixmap.fromImage(image_qt)
+    def picture_received(self, pixmap: QPixmap):
+        if self.state == AppState.WAITING_FOR_PICTURE:
+            self.label.setPixmap(pixmap.scaledToHeight(self.imageHeight))
+            self.received_picture = QPixmap(pixmap)
+            self.start_delete_timer()
+            self.deleteButton.setEnabled(True)
+            self.printAndDelButton.setEnabled(True)
+            self.state = AppState.PICTURE_SHOWING
+
+    def preview_received(self, pixmap: QPixmap):
         self.label.setPixmap(pixmap.scaledToHeight(self.imageHeight))
 
-    def image_updated(self, image: Image):
-        if self.state == AppState.WAITING_FOR_PICTURE:
-            image_qt = ImageQt.ImageQt(image)
-            pixmap = QPixmap.fromImage(image_qt)
-            self.label.setPixmap(pixmap.scaledToHeight(self.imageHeight))
-            self.state = AppState.PICTURE_SHOWING
+    def start_delete_timer(self):
+        self.deleteCounter = 60
+        self.deleteTimer.start()
+
+    def delete_timer_tick(self):
+        self.deleteCounter -= 1
+        if self.deleteCounter <= 0:
+            self.deleteTimer.stop()
+            self.start_preview()
+
+        pixmap = QPixmap(self.received_picture)
+        pixmap = pixmap.scaledToHeight(self.imageHeight)
+        painter = QPainter(pixmap)
+        painter.setPen(QColor("white"))
+        font = QFont("Arial")
+        font.setBold(True)
+        font.setPointSize(30)
+        painter.setFont(font)
+        painter.drawText(50, 50, "Picture will be deleted in " + str(self.deleteCounter) + " seconds")
+        painter.end()
+        self.label.setPixmap(pixmap)
 
 
 if __name__ == '__main__':
