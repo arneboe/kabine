@@ -1,3 +1,4 @@
+import os
 import sys
 import threading
 from enum import Enum
@@ -17,6 +18,7 @@ class AppState(Enum):
     PRVIEW_SHOWING = 0
     PICTURE_SHOWING = 1
     WAITING_FOR_PICTURE = 2
+    PRINTING = 3
     INIT = 99
     pass
 
@@ -115,6 +117,8 @@ class App(QWidget):
     def print_pressed(self):
         if self.state == AppState.PICTURE_SHOWING:
             self.deleteTimer.stop()
+            os.system("/home/arne/Downloads/aspectpad -a 1.48 -p white /home/arne/image.png /home/arne/image_conv.png")
+            os.system("lp /home/arne/image_conv.png")
             self.start_preview()
 
 
