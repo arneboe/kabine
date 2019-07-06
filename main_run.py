@@ -5,7 +5,7 @@ from enum import Enum
 from PIL import Image, ImageQt
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QSpinBox, QHBoxLayout, QComboBox, \
     QGraphicsView
-from PyQt5.QtGui import QIcon, QPixmap, QFont, QPainter, QColor
+from PyQt5.QtGui import QIcon, QPixmap, QFont, QPainter, QColor, QPalette, QImage
 from PyQt5.QtCore import Qt, QTimer
 from Configuration import Iso, WhiteBalance, Aperature, ShutterSpeed
 
@@ -35,9 +35,15 @@ class App(QWidget):
 
         self.deleteCounter = 0
 
+        palette = QPalette()
+        palette.setColor(QPalette.Background, QColor("black"))
+        self.setAutoFillBackground(True)
+        self.setPalette(palette)
+
         self.label = QLabel(self)
+        self.label.setAlignment(Qt.AlignHCenter)
         layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignHCenter)
+        #layout.setAlignment(Qt.AlignHCenter)
         layout.addWidget(self.label)
 
         buttonFont = QFont( "Arial")
@@ -51,18 +57,19 @@ class App(QWidget):
 
         self.takePicButton = QLabel("Take Picture")
         self.takePicButton.setFont(buttonFont)
+        self.takePicButton.setStyleSheet("QLabel { background-color : black; color : white; }")
         buttonLayout.addWidget(self.takePicButton)
 
         self.printAndDelButton = QLabel("Print & Delete Picture")
         self.printAndDelButton.setFont(buttonFont)
-        self.printAndDelButton.setEnabled(False)
+        self.printAndDelButton.setStyleSheet("QLabel { background-color : black; color : white; }")
 
 
         buttonLayout.addWidget(self.printAndDelButton)
 
         self.deleteButton = QLabel("Delete Picture")
         self.deleteButton.setFont(buttonFont)
-        self.deleteButton.setEnabled(False)
+        self.deleteButton.setStyleSheet("QLabel { background-color : black; color : white; }")
         buttonLayout.addWidget(self.deleteButton)
 
         layout.addLayout(buttonLayout)
@@ -99,9 +106,8 @@ class App(QWidget):
         if self.state == AppState.INIT or self.state == AppState.PICTURE_SHOWING:
             self.camera.start_preview()
             self.deleteTimer.stop()
-            self.deleteButton.setEnabled(False)
-            self.printAndDelButton.setEnabled(False)
-            self.takePicButton.setEnabled(True)
+            self.printAndDelButton.setStyleSheet("QLabel { background-color : black; color : black; }")
+            self.deleteButton.setStyleSheet("QLabel { background-color : black; color : black; }")
             self.state = AppState.PRVIEW_SHOWING
         else:
             print("start Preview, illegal state", self.state)
@@ -119,28 +125,42 @@ class App(QWidget):
 
     def clear_picture(self):
         pixmap = QPixmap(self.label.pixmap().width(), self.imageHeight)
-        painter = QPainter(pixmap)
+        scaled = pixmap.scaledToHeight(self.imageHeight)
+        painter = QPainter(scaled)
         painter.fillRect(0, 0, self.label.pixmap().width(), self.imageHeight, QColor("black"))
+        painter.setPen(QColor("white"))
+        font = QFont("Arial")
+        font.setPointSize(50)
+        painter.setFont(font)
+        painter.drawText(200, 400, "Taking Picture...")
         painter.end()
-        self.label.setPixmap(pixmap.scaledToHeight(self.imageHeight))
+
+
+        self.label.setPixmap(scaled)
 
     def take_picture_pressed(self):
         self.state = AppState.WAITING_FOR_PICTURE
         self.deleteTimer.stop()
+        self.camera.stop_preview()
         self.clear_picture()
         self.camera.take_picture()
 
-    def picture_received(self, pixmap: QPixmap):
+    def picture_received(self):
         if self.state == AppState.WAITING_FOR_PICTURE:
-            self.label.setPixmap(pixmap.scaledToHeight(self.imageHeight))
+            pixmap = QPixmap("/home/arne/image.png")
+            print(pixmap.size())
+            print(self.imageHeight)
+            scaled = pixmap.scaledToHeight(self.imageHeight)
+            self.label.setPixmap(scaled)
             self.received_picture = QPixmap(pixmap)
+            self.printAndDelButton.setStyleSheet("QLabel { background-color : black; color : white; }")
+            self.deleteButton.setStyleSheet("QLabel { background-color : black; color : white; }")
             self.start_delete_timer()
-            self.deleteButton.setEnabled(True)
-            self.printAndDelButton.setEnabled(True)
             self.state = AppState.PICTURE_SHOWING
 
     def preview_received(self, pixmap: QPixmap):
-        self.label.setPixmap(pixmap.scaledToHeight(self.imageHeight))
+        if self.state == AppState.PRVIEW_SHOWING:
+            self.label.setPixmap(pixmap.scaledToHeight(self.imageHeight))
 
     def start_delete_timer(self):
         self.deleteCounter = 60
@@ -163,7 +183,6 @@ class App(QWidget):
         painter.drawText(50, 50, "Picture will be deleted in " + str(self.deleteCounter) + " seconds")
         painter.end()
         self.label.setPixmap(pixmap)
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
