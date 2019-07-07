@@ -1,18 +1,14 @@
 import os
 import sys
-import threading
 from enum import Enum
 
-from PIL import Image, ImageQt
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QSpinBox, QHBoxLayout, QComboBox, \
     QGraphicsView
 from PyQt5.QtGui import QIcon, QPixmap, QFont, QPainter, QColor, QPalette, QImage
 from PyQt5.QtCore import Qt, QTimer
-from Configuration import Iso, WhiteBalance, Aperature, ShutterSpeed
 
 from Camera import Camera
-from functools import partial
-
+from gpio import Buttons
 
 class AppState(Enum):
     PRVIEW_SHOWING = 0
@@ -79,7 +75,10 @@ class App(QWidget):
         self.state = AppState.INIT
         self.showFullScreen()
         self.imageHeight = 900
-    
+
+        self.buttons = Buttons()
+        self.buttons.button_pressed.connect(self.button_pressed)
+
         #the pi is slow, wait for ui to show before initing the camera
         QTimer.singleShot(2000, self.delayed_init) 
 
@@ -194,6 +193,9 @@ class App(QWidget):
         painter.drawText(50, 50, "Picture will be deleted in " + str(self.deleteCounter) + " seconds")
         painter.end()
         self.label.setPixmap(pixmap)
+
+    def button_pressed(self, button_number):
+        print("button pressed")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
