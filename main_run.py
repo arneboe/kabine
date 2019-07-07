@@ -78,6 +78,7 @@ class App(QWidget):
 
         self.buttons = Buttons()
         self.buttons.button_pressed.connect(self.button_pressed)
+        self.buttons.start()
 
         #the pi is slow, wait for ui to show before initing the camera
         QTimer.singleShot(2000, self.delayed_init) 
@@ -111,9 +112,10 @@ class App(QWidget):
 
     def start_preview(self):
         print("start preview")
-        if self.state == AppState.INIT or self.state == AppState.PICTURE_SHOWING:
+        if self.state == AppState.INIT or self.state == AppState.PICTURE_SHOWING or AppState.PRINTING:
             self.camera.start_preview()
             self.deleteTimer.stop()
+            self.takePicButton.setStyleSheet("QLabel { background-color : black; color : white; }")
             self.printAndDelButton.setStyleSheet("QLabel { background-color : black; color : black; }")
             self.deleteButton.setStyleSheet("QLabel { background-color : black; color : black; }")
             self.state = AppState.PRVIEW_SHOWING
@@ -123,9 +125,16 @@ class App(QWidget):
     def print_pressed(self):
         if self.state == AppState.PICTURE_SHOWING:
             self.deleteTimer.stop()
-            os.system("/home/pi/kabine/aspectpad -a 1.48 -p white /home/pi/ramdisk/image.bmp /home/pi/ramdisk/image_conv.bmp")
-            os.system("lp /home/pi/ramdisk/image_conv.bmp")
-            self.start_preview()
+            self.show_text("Printing... (~60 Seconds)")
+            self.state = AppState.PRINTING
+            QTimer.singleShot(100, self.start_printing) 
+            QTimer.singleShot(60000, self.start_preview)
+        else:
+            print("print_pressed illegal state")
+
+    def start_printing(self):
+        os.system("/home/pi/kabine/aspectpad -a 1.48 -p white /home/pi/ramdisk/image.bmp /home/pi/ramdisk/image_conv.bmp")
+        os.system("lp /home/pi/ramdisk/image_conv.bmp")        
 
 
     def delete_pressed(self):
@@ -133,7 +142,7 @@ class App(QWidget):
             self.deleteTimer.stop()
             self.start_preview()
 
-    def clear_picture(self):
+    def show_text(self, text):
         pixmap = QPixmap(self.label.pixmap().width(), self.imageHeight)
         scaled = pixmap.scaledToHeight(self.imageHeight)
         painter = QPainter(scaled)
@@ -142,11 +151,17 @@ class App(QWidget):
         font = QFont("Arial")
         font.setPointSize(50)
         painter.setFont(font)
-        painter.drawText(200, 400, "Taking Picture...")
+        painter.drawText(200, 400, text)
         painter.end()
-
-
         self.label.setPixmap(scaled)
+        self.takePicButton.setStyleSheet("QLabel { background-color : black; color : black; }")
+        self.printAndDelButton.setStyleSheet("QLabel { background-color : black; color : black; }")
+        self.deleteButton.setStyleSheet("QLabel { background-color : black; color : black; }")
+
+
+    def clear_picture(self):
+        self.show_text("Taking Picture...")
+
 
     def take_picture_pressed(self):
         self.state = AppState.WAITING_FOR_PICTURE
@@ -195,10 +210,17 @@ class App(QWidget):
         self.label.setPixmap(pixmap)
 
     def button_pressed(self, button_number):
-        print("button pressed")
-
+        print("button: " + str(button_number))
+        if button_number == 8:
+            self.print_pressed()
+        elif button_number == 12:
+            self.delete_pressed()
+        elif button_number == 16:
+            self.take_picture_pressed()
+        else:
+            print("unknown button number")
+        
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
-    app.exec()
-
+    app.exec()          

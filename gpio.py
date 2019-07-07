@@ -1,7 +1,8 @@
 import RPi.GPIO as GPIO
 from PyQt5 import QtCore
 from PyQt5.QtCore import QThread
-
+from PyQt5.QtWidgets import QApplication
+import sys
 
 class Buttons(QThread):
     button_pressed = QtCore.pyqtSignal(int)
@@ -23,5 +24,13 @@ class Buttons(QThread):
             self.msleep(30)
             for i in self.buttons:
                 if (GPIO.input(i) == GPIO.HIGH):
+                    print("button: " + str(i))
                     self.button_pressed.emit(i)
 
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    es = Buttons()
+    es.start()
+    
+    app.exec()    
