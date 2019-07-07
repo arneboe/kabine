@@ -76,14 +76,20 @@ class App(QWidget):
 
         layout.addLayout(buttonLayout)
         self.setLayout(layout)
-
-        self.showFullScreen()
-
-        self.imageHeight = QApplication.desktop().screenGeometry().height() - self.deleteButton.height() - 70
-        print(self.imageHeight)
         self.state = AppState.INIT
-        self.start_preview()
+        self.showFullScreen()
+        self.imageHeight = 900
+    
+        #the pi is slow, wait for ui to show before initing the camera
+        QTimer.singleShot(2000, self.delayed_init) 
 
+        
+    def delayed_init(self):
+        #self.imageHeight = QApplication.desktop().screenGeometry().height() - self.deleteButton.height() - 70
+        print(self.imageHeight)
+
+        self.start_preview()
+ 
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
       #  print(event.key())
@@ -105,6 +111,7 @@ class App(QWidget):
             self.take_picture_pressed()
 
     def start_preview(self):
+        print("start preview")
         if self.state == AppState.INIT or self.state == AppState.PICTURE_SHOWING:
             self.camera.start_preview()
             self.deleteTimer.stop()
@@ -117,8 +124,8 @@ class App(QWidget):
     def print_pressed(self):
         if self.state == AppState.PICTURE_SHOWING:
             self.deleteTimer.stop()
-            os.system("/home/arne/Downloads/aspectpad -a 1.48 -p white /home/arne/image.png /home/arne/image_conv.png")
-            os.system("lp /home/arne/image_conv.png")
+            os.system("/home/pi/kabine/aspectpad -a 1.48 -p white /home/pi/ramdisk/image.bmp /home/pi/ramdisk/image_conv.bmp")
+            os.system("lp /home/pi/ramdisk/image_conv.bmp")
             self.start_preview()
 
 
@@ -151,7 +158,7 @@ class App(QWidget):
 
     def picture_received(self):
         if self.state == AppState.WAITING_FOR_PICTURE:
-            pixmap = QPixmap("/home/arne/image.png")
+            pixmap = QPixmap("/home/pi/ramdisk/image.bmp")
             print(pixmap.size())
             print(self.imageHeight)
             scaled = pixmap.scaledToHeight(self.imageHeight)

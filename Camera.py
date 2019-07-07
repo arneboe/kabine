@@ -6,10 +6,21 @@ from PIL import Image, ImageQt
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject, QThread
 from PyQt5.QtGui import QPixmap, QPainter, QColor
+import time
 
 from Configuration import Configuration
 
 last_picture = None
+
+def timing(f):
+    def wrap(*args):
+        time1 = time.time()
+        ret = f(*args)
+        time2 = time.time()
+        print('{:s} function took {:.3f} ms'.format(f.__name__, (time2-time1)*1000.0))
+
+        return ret
+    return wrap
 
 
 class PreviewThread(QThread):
@@ -31,10 +42,12 @@ class PreviewThread(QThread):
 
     def run(self):
         while self.running:
+            
             camera_file = gp.check_result(gp.gp_camera_capture_preview(self.camera))
             file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
             image_qt = ImageQt.ImageQt(Image.open(io.BytesIO(file_data)))
             pixmap = QPixmap.fromImage(image_qt)
+
             self.preview_received.emit(pixmap)
 
 class PictureThread(QThread):
@@ -45,18 +58,32 @@ class PictureThread(QThread):
         self.camera = camera
         self.pixmap = QPixmap()
 
-    def run(self):
-        global last_picture
+    @timing
+    def do(self):
+        t1 = time.time()
         file_path = gp.check_result(gp.gp_camera_capture(self.camera, gp.GP_CAPTURE_IMAGE))
         print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
         camera_file = gp.check_result(gp.gp_camera_file_get(self.camera, file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL))
         file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
         gp.check_result(gp.gp_camera_file_delete(self.camera, file_path.folder, file_path.name))
+        t2 = time.time()
+        print('recv {:.3f} ms'.format((t2-t1)*1000.0))
 
         image_qt = ImageQt.ImageQt(Image.open(io.BytesIO(file_data)))
-        image_qt.save("/home/arne/image.png")
+        
+        
+        t3 = time.time()
+        print('img {:.3f} ms'.format((t3-t1)*1000.0))
+        image_qt.save("/home/pi/ramdisk/image.bmp")
+                    
+        t4 = time.time()
+        print('pixmap {:.3f} ms'.format((t4-t1)*1000.0))
 
-        self.picture_received.emit()
+        self.picture_received.emit() 
+
+    def run(self):
+        self.do()
+
 
 
 class Camera(QObject):
