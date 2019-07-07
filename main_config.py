@@ -13,9 +13,12 @@ class App(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.camera = Camera(partial(App.preview_image_updated, self), partial(App.image_updated, self))
+        self.camera = Camera()
         self.width = 640
         self.height = 480
+
+        self.camera.picture_received.connect(self.picture_received)
+        self.camera.preview_received.connect(self.preview_received)
 
         self.start_preview_button = QPushButton('Start Preview', self)
         self.stop_preview_button = QPushButton('Stop Preview', self)
@@ -104,17 +107,12 @@ class App(QWidget):
     def take_picture_clicked(self):
         self.camera.take_picture()
 
-    def preview_image_updated(self, image: Image):
-        image_qt = ImageQt.ImageQt(image)
-        pixmap = QPixmap.fromImage(image_qt)
+    def preview_received(self, pixmap: QPixmap):
         self.label.setPixmap(pixmap.scaledToWidth(800))
-        print("got img")
 
-    def image_updated(self, image: Image):
-        image_qt = ImageQt.ImageQt(image)
-        pixmap = QPixmap.fromImage(image_qt)
+    def picture_received(self):
+        pixmap = QPixmap("/home/pi/ramdisk/image.bmp")
         self.label.setPixmap(pixmap.scaledToWidth(800))
-        print("got readl img")
 
 
 if __name__ == '__main__':
