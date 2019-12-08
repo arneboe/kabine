@@ -10,7 +10,7 @@ import time
 
 from Configuration import Configuration
 
-last_picture = None
+last_picture = None  
 
 def timing(f):
     def wrap(*args):
