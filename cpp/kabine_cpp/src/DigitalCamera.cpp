@@ -211,6 +211,7 @@ int DigitalCamera::GetConfigValueString (const char *key, std::string& result)
                 break;
             }
             case GP_WIDGET_TOGGLE: // int
+            case GP_WIDGET_RANGE:
             {
                     int t=-7;
                     int ret=gp_widget_get_value( child, &t );
@@ -362,14 +363,6 @@ std::shared_ptr<QPixmap> DigitalCamera::captureImage()
         std::cout << "error: " << gp_result_as_string(ret) << std::endl;
         throw std::runtime_error("gp_camera_get_storageinfo FAIL");
     }
-
-    /* NOP: This gets overridden in the library to /capt0000.jpg */
-    //strcpy(camera_file_path.folder, "/");
-    //strcpy(camera_file_path.name, "foo.jpg");
-    //strcpy(camera_file_path.name, sifs->basedir);
-    //strcpy(camera_file_path.name, "foo.cr2");
-    //strcat(camera_file_path.name, "/foo.cr2");
-
     ret = gp_camera_capture(pCamera, GP_CAPTURE_IMAGE, &camera_file_path, pContext);
     if (ret != GP_OK)
     {
