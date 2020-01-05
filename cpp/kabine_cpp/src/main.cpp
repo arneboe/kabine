@@ -17,8 +17,8 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     
     QQmlEngine engine;
-    ImageProvider imageProvder;
-    engine.addImageProvider(QLatin1String("capture_provider"), &imageProvder);
+    ImageProvider* imageProvder = new ImageProvider();
+    engine.addImageProvider(QLatin1String("capture_provider"), imageProvder);
     QQmlContext *objectContext = new QQmlContext(engine.rootContext());
     QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/main.qml")));
     QObject *object = component.create(objectContext);
@@ -27,12 +27,14 @@ int main(int argc, char *argv[])
     CameraHandler h;
 
     QObject::connect(&h, &CameraHandler::capturedImage,
-                     &imageProvder, &ImageProvider::capturedImage);
+                     imageProvder, &ImageProvider::capturedImage);
     
-     h.triggerCapture();
+     h.triggerPreviewStreaming();
 
     
-    return app.exec();
+    app.exec();
+    h.stopPreviewStreaming();
 
+    return 0;
     
 }

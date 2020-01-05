@@ -2,6 +2,7 @@
 #include <QQuickImageProvider>
 #include <QPixmap>
 #include <memory>
+#include <mutex>
 
 //ATTENTION QObject needs to be inherited from first
 class ImageProvider : public QObject, public QQuickImageProvider
@@ -17,5 +18,5 @@ public slots:
     
 private:
     QPixmap pixmap;
-    
+    std::mutex pixmapMutex;
 };

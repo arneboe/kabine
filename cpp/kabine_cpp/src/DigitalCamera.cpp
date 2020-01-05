@@ -98,10 +98,10 @@ std::shared_ptr<QPixmap> DigitalCamera::captureImage()
     CameraStorageInformation* sifs;
     int nrofsifs = -1;
 
-    printf("Capturing.\n");
+    std::cout << "Capturing" << std::endl;
 
     if(gp_camera_get_storageinfo(pCamera, &sifs, &nrofsifs, pContext) != GP_OK)
-    if (ret < GP_OK) {
+    if (ret != GP_OK) {
         std::cout << "error: " << gp_result_as_string(ret) << std::endl;
         throw std::runtime_error("gp_camera_get_storageinfo FAIL");
     }
@@ -114,16 +114,17 @@ std::shared_ptr<QPixmap> DigitalCamera::captureImage()
     //strcat(camera_file_path.name, "/foo.cr2");
 
     ret = gp_camera_capture(pCamera, GP_CAPTURE_IMAGE, &camera_file_path, pContext);
-    if (ret < GP_OK)
+    if (ret != GP_OK)
     {
         std::cout << "error: " << gp_result_as_string(ret) << std::endl;
         throw std::runtime_error("gp_camera_capture FAIL");
     }
 
-    printf("Pathname on the camera: %s/%s\n", camera_file_path.folder, camera_file_path.name);
-
+    printf("Pathname on the camera: %s/%s", camera_file_path.folder, camera_file_path.name);
+    std::cout << std::endl;
+    
     ret = gp_file_new(&file);
-    if (ret < GP_OK) 
+    if (ret != GP_OK) 
     {
         std::cout << "error: " << gp_result_as_string(ret) << std::endl;
         throw std::runtime_error("gp_file_new FAIL");
@@ -132,7 +133,7 @@ std::shared_ptr<QPixmap> DigitalCamera::captureImage()
 
     //ret = gp_camera_file_get(camera, folder, camera_file_path->name, GP_FILE_TYPE_RAW , file, context);
     ret = gp_camera_file_get(pCamera, camera_file_path.folder, camera_file_path.name, GP_FILE_TYPE_NORMAL, file, pContext);
-    if (ret < GP_OK) 
+    if (ret != GP_OK) 
     {
         std::cout << "error: " << gp_result_as_string(ret) << std::endl;
         throw std::runtime_error("gp_camera_file_get FAIL");
@@ -141,24 +142,58 @@ std::shared_ptr<QPixmap> DigitalCamera::captureImage()
     const char* imageData = nullptr;
     unsigned long int imageSize = 0;
     ret = gp_file_get_data_and_size (file, &imageData, &imageSize);
-    if(ret < GP_OK)
+    if(ret != GP_OK)
     {
         std::cout << "error: " << gp_result_as_string(ret) << std::endl;
         throw std::runtime_error("gp_file_get_data_and_size FAIL");
     }
 
     ret = gp_camera_file_delete(pCamera, camera_file_path.folder, camera_file_path.name, pContext);
-    if(ret < GP_OK)
+    if(ret != GP_OK)
     {
         std::cout << "error: " << gp_result_as_string(ret) << std::endl;
         throw std::runtime_error("gp_camera_file_delete FAIL");
     }
-
+   
+    std::shared_ptr<QPixmap> pixmap(new QPixmap());
+    pixmap->loadFromData((const unsigned char*) imageData, imageSize);
     gp_file_free(file);
+    return pixmap;    
+}
+
+std::shared_ptr<QPixmap> DigitalCamera::capturePreview()
+{
+    int ret = 0;
+    CameraFile* cameraFile;
+    
+    ret = gp_file_new(&cameraFile);
+    if(ret != GP_OK)
+    {
+        std::cout << "error: " << gp_result_as_string(ret) << std::endl;
+        throw std::runtime_error("gp_file_new FAIL");
+    }
+    
+    ret = gp_camera_capture_preview(pCamera, cameraFile, pContext);
+    if(ret != GP_OK)
+    {
+        std::cout << "error: " << gp_result_as_string(ret) << std::endl;
+        throw std::runtime_error("gp_camera_capture_preview FAIL");
+    }
+    
+    const char* imageData = nullptr;
+    unsigned long int imageSize = 0;
+    ret = gp_file_get_data_and_size (cameraFile, &imageData, &imageSize);
+    if(ret != GP_OK)
+    {
+        std::cout << "error: " << gp_result_as_string(ret) << std::endl;
+        throw std::runtime_error("gp_file_get_data_and_size FAIL");
+    }
+    
     
     std::shared_ptr<QPixmap> pixmap(new QPixmap());
     pixmap->loadFromData((const unsigned char*) imageData, imageSize);
-    return pixmap;    
+    gp_file_free(cameraFile);
+    return pixmap;  
 }
 
 

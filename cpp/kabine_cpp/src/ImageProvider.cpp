@@ -8,14 +8,18 @@ ImageProvider::ImageProvider() : QQuickImageProvider(QQuickImageProvider::Pixmap
 
 QPixmap ImageProvider::requestPixmap ( const QString& id, QSize* size, const QSize& requestedSize)
 {
-    if(size)
-        *size = pixmap.size();
-    return pixmap;
+    {
+        const std::lock_guard<std::mutex> lock(pixmapMutex);
+        if(size)
+            *size = pixmap.size();
+        return pixmap;
+    }
 }
 
 void ImageProvider::capturedImage(std::shared_ptr<QPixmap> image)
 {
     //FIXME avoid copy here
     //FIXME add thread protection
+    const std::lock_guard<std::mutex> lock(pixmapMutex);
     pixmap = *image;
 }

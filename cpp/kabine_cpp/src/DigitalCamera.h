@@ -9,21 +9,17 @@
 class DigitalCamera
 {
 public:
-    /**
-     * Default constructor
-     */
     DigitalCamera();
-
-    /**
-     * Destructor
-     */
     ~DigitalCamera();
+    
     void open();
     
     std::shared_ptr<QPixmap> captureImage();
-        
+    std::shared_ptr<QPixmap> capturePreview();   
     
 private:
+    
+    int setConfigValueString (const char *key, const char *val);
 
     GPContext* pContext;
     Camera* pCamera;
