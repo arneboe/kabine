@@ -9,57 +9,27 @@
 #include <QQuickImageProvider>
 #include <iostream>
 
+Q_DECLARE_METATYPE(std::shared_ptr<QPixmap>);
+
 int main(int argc, char *argv[])
 {
+    qRegisterMetaType<std::shared_ptr<QPixmap>>();
     QGuiApplication app(argc, argv);
     
     QQmlEngine engine;
-    engine.addImageProvider(QLatin1String("capture_provider"), new ImageProvider);
+    ImageProvider imageProvder;
+    engine.addImageProvider(QLatin1String("capture_provider"), &imageProvder);
     QQmlContext *objectContext = new QQmlContext(engine.rootContext());
     QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/main.qml")));
     QObject *object = component.create(objectContext);
-//     QQuickWindow *item = qobject_cast<QQuickWindow*>(object);
-//     QQuickItem* image = item->findChild<QQuickItem*>("image_viewer");
-//     
-//     QMetaObject::invokeMethod(image, "sourceChanged", Q_ARG(QUrl,  QUrl(QStringLiteral("image://capture_provider/image5"))));
 
+
+    CameraHandler h;
+
+    QObject::connect(&h, &CameraHandler::capturedImage,
+                     &imageProvder, &ImageProvider::capturedImage);
     
-    
-//     view.show();
-    
-//     QQmlApplicationEngine engine;
-
-//     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
-   
-
-
-    
-    
-//     QObject *qmlObject = rootObject->findChild<QObject*>("main_window");
-//     QObject* image = qmlObject->findChild<QObject*>("image_viewer");
-//     image->setProperty("cache", false);
-    
-
-
-
-//     CameraHandler h;
-//     
-//     QObject::connect(&h, &CameraHandler::capturedImage, 
-//     [&engine](std::shared_ptr<QPixmap> image)
-//     {   
-//     
-//     QString returnedValue;
-// QString msg = "Hello from C++";
-//     
-//     std::cout << "engine.rootObjects(): " << engine.rootObjects().size() << std::endl;
-// 
-//     QObject *rootObject = engine.rootObjects().first();
-//     QMetaObject::invokeMethod(rootObject, "myQmlFunction",
-//         Q_RETURN_ARG(QString, returnedValue),
-//         Q_ARG(QString, msg));
-//     });
-//     
-//      h.triggerCapture();
+     h.triggerCapture();
 
     
     return app.exec();

@@ -20,19 +20,12 @@ Window
         anchors.fill: parent
         property int currentFrameNumber: 0
         source: "image://capture_provider/image" + currentFrameNumber
-        
-//         SequentialAnimation on currentFrameNumber {
-//             loops: Animation.Infinite
-//             PropertyAnimation { to: 50 }
-//             PropertyAnimation { to: 0 }
-//         }
-//         
 
         NumberAnimation on currentFrameNumber {
             from: 0;
-            to: 50;
+            to: 25;
             loops: Animation.Infinite;
-            duration: 50 * Math.abs(to - from)
+            duration: 1000
         }
     
         MouseArea {

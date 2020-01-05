@@ -1,19 +1,21 @@
 #include "ImageProvider.h"
 #include <iostream>
-ImageProvider::ImageProvider() : QQuickImageProvider(QQuickImageProvider::Pixmap)
+ImageProvider::ImageProvider() : QQuickImageProvider(QQuickImageProvider::Pixmap), QObject(nullptr), 
+                                 pixmap(50, 50)
 {
+       pixmap.fill(QColor("black").rgba());
 }
 
-QPixmap ImageProvider::requestPixmap ( const QString& id, QSize* size, const QSize& requestedSize )
+QPixmap ImageProvider::requestPixmap ( const QString& id, QSize* size, const QSize& requestedSize)
 {
-    std::cout << "AAAA" << std::endl;
-      int width = 100;
-       int height = 50;
+    if(size)
+        *size = pixmap.size();
+    return pixmap;
+}
 
-       if (size)
-          *size = QSize(width, height);
-       QPixmap pixmap(requestedSize.width() > 0 ? requestedSize.width() : width,
-                      requestedSize.height() > 0 ? requestedSize.height() : height);
-       pixmap.fill(QColor("red").rgba());
-       return pixmap;
+void ImageProvider::capturedImage(std::shared_ptr<QPixmap> image)
+{
+    //FIXME avoid copy here
+    //FIXME add thread protection
+    pixmap = *image;
 }
