@@ -23,6 +23,7 @@ private:
     void configure();
     
     int SetConfigValueString (const char *key, const char *val);
+    int GetConfigValueString (const char *key, std::string& result);
 
     GPContext* pContext;
     Camera* pCamera;
