@@ -20,22 +20,19 @@ Window
         anchors.fill: parent
         property int currentFrameNumber: 0
         source: "image://capture_provider/image" + currentFrameNumber
-
+        signal imageClicked()
+        
+        MouseArea {
+            anchors.fill: parent
+            onClicked: image_viewer.imageClicked()
+        }
+        
         NumberAnimation on currentFrameNumber {
             from: 0;
             to: 25;
             loops: Animation.Infinite;
             duration: 1000
         }
-    
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                parent.currentFrameNumber = parent.currentFrameNumber + 1
-//                 parent.sourceChanged(parent.source);
-            }
-        }
-
     }
 
 }

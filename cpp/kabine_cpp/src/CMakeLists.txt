@@ -7,7 +7,8 @@ qt5_add_resources(kabine_cpp_SRCS resources.qrc)
 set(SRC_FILES 
     DigitalCamera.cpp 
     CameraHandler.cpp
-    ImageProvider.cpp)
+    ImageProvider.cpp
+    QmlSignalRouter.cpp)
 
 add_executable(kabine_cpp main.cpp ${kabine_cpp_SRCS} ${SRC_FILES})
 qt5_use_modules(kabine_cpp Quick Core Gui )

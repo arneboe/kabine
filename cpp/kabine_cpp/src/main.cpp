@@ -8,6 +8,7 @@
 #include <QQmlContext>
 #include <QQuickImageProvider>
 #include <iostream>
+#include "QmlSignalRouter.h"
 
 Q_DECLARE_METATYPE(std::shared_ptr<QPixmap>);
 
@@ -22,12 +23,24 @@ int main(int argc, char *argv[])
     QQmlContext *objectContext = new QQmlContext(engine.rootContext());
     QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/main.qml")));
     QObject *object = component.create(objectContext);
+    QQuickItem* image = object->findChild<QQuickItem*>("image_viewer");
+        
+    QmlSignalRouter signalRouter;
+    
 
-
+    
+    
     CameraHandler h;
-
     QObject::connect(&h, &CameraHandler::capturedImage,
                      imageProvder, &ImageProvider::capturedImage);
+    
+    
+    QObject::connect(image, SIGNAL(imageClicked()), &signalRouter, SLOT(imageClicked()));
+    QObject::connect(&signalRouter, &QmlSignalRouter::imageClickedSignal, 
+                     [&h]()
+                     {
+                         h.triggerCapture();
+                    });
     
      h.triggerPreviewStreaming();
 
