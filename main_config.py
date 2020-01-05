@@ -13,7 +13,7 @@ class App(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.camera = Camera()
+        self.camera = Camera(False)
         self.width = 640
         self.height = 480
 
@@ -63,8 +63,8 @@ class App(QWidget):
         layout = QVBoxLayout(self)
 
         layout.addWidget(self.label)
-        layout.addWidget(self.start_preview_button)
-        layout.addWidget(self.stop_preview_button)
+        #layout.addWidget(self.start_preview_button)
+        #layout.addWidget(self.stop_preview_button)
         layout.addWidget(self.take_picture_button)
         layout.addWidget(self.config_button)
 

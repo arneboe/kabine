@@ -177,7 +177,27 @@ class Configuration:
         self.set_iso(Iso.ISO_100)
         self.set_white_balance(WhiteBalance.WB_AUTO)
         self.set_aperture(Aperature.AP_AUTO)
-        self.set_shutter_speed(ShutterSpeed.SS_auto)
+        self.set_shutter_speed(ShutterSpeed.SS_auto)#
+        self.set_flashmode()
+        self.set_shootmode()
+        
+    def set_shootmode(self):
+        flash_widget = self.find_config_widget_by_name("afdistance")
+        if flash_widget.get_readonly():
+            print("afdistance READ ONLY")
+            return
+        flash_widget.set_value("Zone Focus (Close-up)")
+        self.camera.set_config(self.config)
+        
+    def set_flashmode(self):
+        flash_widget = self.find_config_widget_by_name("flashmode")
+        if flash_widget.get_readonly():
+            print("flash mode READ ONLY")
+            return
+
+        for choice in flash_widget.get_choices():
+            if choice:
+                print(choice)
 
 
     def set_shutter_speed(self, ss : ShutterSpeed):
@@ -258,6 +278,18 @@ class Configuration:
                or child_type == gp.GP_WIDGET_RADIO:
                 value = child.get_value()
                 text += " value:{}".format(value)
+                
+            if child_type == gp.GP_WIDGET_RADIO:
+                choice_count = child.count_choices()
+                if choice_count > 3:
+                    for n in range(choice_count):
+                        choice = child.get_choice(n)
+                        text += "choice:{}".format(choice)
+                else:
+                    for choice in child.get_choices():
+                        if choice:
+                            text += "choice:{}".format(choice)       
+                    
 
             for i in range(level):
                 text = "  " + text

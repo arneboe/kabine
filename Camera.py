@@ -10,7 +10,7 @@ import time
 
 from Configuration import Configuration
 
-last_picture = None  
+last_picture = None
 
 def timing(f):
     def wrap(*args):
@@ -90,7 +90,7 @@ class Camera(QObject):
     picture_received = QtCore.pyqtSignal()
     preview_received = QtCore.pyqtSignal(QPixmap)
 
-    def __init__(self):
+    def __init__(self, start_prev=True):
         '''
         :raises: Exception if camera init fails
         '''
@@ -109,7 +109,8 @@ class Camera(QObject):
         self.take_picture(True)
 
         self.config = Configuration(self.camera)
-        self.start_preview()
+        if start_prev:
+            self.start_preview()
 
     def __del__(self):
         gp.check_result(gp.gp_camera_exit(self.camera))
