@@ -19,7 +19,10 @@ public:
     
 private:
     
-    int setConfigValueString (const char *key, const char *val);
+    /**applys our configuration */
+    void configure();
+    
+    int SetConfigValueString (const char *key, const char *val);
 
     GPContext* pContext;
     Camera* pCamera;
