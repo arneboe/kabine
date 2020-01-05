@@ -10,6 +10,7 @@ QPixmap ImageProvider::requestPixmap ( const QString& id, QSize* size, const QSi
 {
     {
         const std::lock_guard<std::mutex> lock(pixmapMutex);
+        pixmap.scaledToHeight(requestedSize.height());
         if(size)
             *size = pixmap.size();
         return pixmap;
