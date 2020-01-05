@@ -1,6 +1,7 @@
 #pragma once
 #include <gphoto2/gphoto2-camera.h>
-
+#include <QPixmap>
+#include <memory>
 
 /**
  * @todo write docs
@@ -19,7 +20,8 @@ public:
     ~DigitalCamera();
     void open();
     
-    void captureImage();
+    std::shared_ptr<QPixmap> captureImage();
+        
     
 private:
 

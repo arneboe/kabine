@@ -90,7 +90,7 @@ void DigitalCamera::open()
 }
 
 
-void DigitalCamera::captureImage()
+std::shared_ptr<QPixmap> DigitalCamera::captureImage()
 {
     int ret = 0;
     CameraFile *file;
@@ -156,11 +156,9 @@ void DigitalCamera::captureImage()
 
     gp_file_free(file);
     
-    QPixmap pixmap;
-    pixmap.loadFromData((const unsigned char*) imageData, imageSize);
-    QFile diskFile("/home/arne/test.jpg");
-    diskFile.open(QIODevice::WriteOnly);
-    pixmap.save(&diskFile, "JPG");
+    std::shared_ptr<QPixmap> pixmap(new QPixmap());
+    pixmap->loadFromData((const unsigned char*) imageData, imageSize);
+    return pixmap;    
 }
 
 
