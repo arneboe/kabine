@@ -1,14 +1,13 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <memory>
-#include "CameraHandler.h"
-#include "ImageProvider.h"
-#include <QQuickWindow>
-#include <QQuickItem>
 #include <QQmlContext>
-#include <QQuickImageProvider>
+#include <QQmlComponent>
+#include <memory>
 #include <iostream>
 #include "QmlSignalRouter.h"
+#include "StateMachine.h"
+#include "ImageProvider.h"
+#include "CameraHandler.h"
 
 Q_DECLARE_METATYPE(std::shared_ptr<QPixmap>);
 
@@ -22,42 +21,24 @@ int main(int argc, char *argv[])
     engine.addImageProvider(QLatin1String("capture_provider"), imageProvder);
     QQmlContext *objectContext = new QQmlContext(engine.rootContext());
     QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/main.qml")));
+    QObject *object = component.create(objectContext);
     
     std::cout << component.errorString().toStdString() << std::endl;
     
-    std::cout << "import paths\n";
-    const QStringList importPaths = engine.importPathList();
-    for(const QString& p : importPaths)
-    {
-        std::cout << p.toStdString() << std::endl;
-    }
+    CameraHandler cameraHandler;
+    //forward image to display
+    //this will constantly display the current image (either preview or picture)
+    QObject::connect(&cameraHandler, &CameraHandler::capturedImage,
+                     imageProvder, &ImageProvider::capturedImage);
     
-    
-    QObject *object = component.create(objectContext);
-    QQuickItem* image = object->findChild<QQuickItem*>("image_viewer");
-        
-    QmlSignalRouter signalRouter;
-    
-
-    
-    
-//     CameraHandler h;
-//     QObject::connect(&h, &CameraHandler::capturedImage,
-//                      imageProvder, &ImageProvider::capturedImage);
-//     
-//     
-//     QObject::connect(image, SIGNAL(imageClicked()), &signalRouter, SLOT(imageClicked()));
-//     QObject::connect(&signalRouter, &QmlSignalRouter::imageClickedSignal, 
-//                      [&h]()
-//                      {
-//                          h.triggerCapture();
-//                     });
-//     
-//      h.triggerPreviewStreaming();
-
+    StateMachine sm(object, cameraHandler);
+    sm.start();
     
     app.exec();
-//     h.stopPreviewStreaming();
+    
+    //if streaming is running while we shutdown we need to stop it
+    //otherwise the camera will crash
+    cameraHandler.stopPreviewStreaming();
 
     return 0;
     

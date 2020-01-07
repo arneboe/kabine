@@ -1,5 +1,5 @@
 import QtQuick 2.0
-import QtQuick.Window 2.0
+import QtQuick.Window 2.3
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.0
 
@@ -10,6 +10,8 @@ Window
     visible: true
     width: 800
     height: 600
+    visibility: Window.Maximized
+    
     ColumnLayout {
         spacing: 2
         anchors.fill: parent
@@ -43,34 +45,46 @@ Window
         RowLayout {
             spacing: 200
             Layout.alignment: Qt.AlignCenter
-        Button {
-            id: control
-            text: qsTr("Take Picture")
-
-            contentItem: Text {
-                text: control.text
-                font.pointSize: 20
-                opacity: enabled ? 1.0 : 0.3
-                color: "black"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                elide: Text.ElideRight
+            Button {
+                id: take_pic_button
+                objectName: "take_pic_button"
+                contentItem: Text {
+                    text: qsTr("Take Picture")
+                    font.pointSize: 20
+                    opacity: enabled ? 1.0 : 0.3
+                    color: "black"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
             }
 
-//             background: Rectangle {
-//                 implicitWidth: 100
-//                 implicitHeight: 40
-//                 opacity: enabled ? 1 : 0.3
-//                 border.color: control.down ? "#17a81a" : "#21be2b"
-//                 border.width: 1
-//                 radius: 2
-//             }
-}
             Button {
-                text: "Delete Picture"
+                id: print_pic_button
+                objectName: "print_pic_button"
+                contentItem: Text {
+                    text: qsTr("Print & Delete Picture")
+                    font.pointSize: 20
+                    opacity: enabled ? 1.0 : 0.3
+                    color: "black"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
             }
+            
             Button {
-                text: "Delete & Print Picture"
+                id: delete_pic_button
+                objectName: "delete_pic_button"
+                contentItem: Text {
+                    text: qsTr("Delete Picture")
+                    font.pointSize: 20
+                    opacity: enabled ? 1.0 : 0.3
+                    color: "black"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
             }
         }
     }

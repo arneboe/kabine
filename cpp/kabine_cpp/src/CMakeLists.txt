@@ -5,6 +5,7 @@ find_package(Qt5 COMPONENTS Quick Core Gui Widgets REQUIRED)
 qt5_add_resources(kabine_cpp_SRCS resources.qrc)
 
 set(SRC_FILES 
+    StateMachine.cpp
     DigitalCamera.cpp 
     CameraHandler.cpp
     ImageProvider.cpp

@@ -4,8 +4,13 @@
 
 CameraHandler::CameraHandler() : QObject(nullptr), stopPreviewStream(false)
 {
+}
+
+void CameraHandler::start()
+{
     camera.open();
 }
+
 
 void CameraHandler::triggerCapture()
 {   

@@ -7,7 +7,6 @@
 //ATTENTION QObject needs to be inherited from first
 class ImageProvider : public QObject, public QQuickImageProvider
 {
-
     Q_OBJECT
 public:
     ImageProvider();

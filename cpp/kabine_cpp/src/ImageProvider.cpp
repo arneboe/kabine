@@ -1,7 +1,7 @@
 #include "ImageProvider.h"
 #include <iostream>
 ImageProvider::ImageProvider() : QQuickImageProvider(QQuickImageProvider::Pixmap), QObject(nullptr), 
-                                 pixmap(50, 50)
+                                 pixmap(3264, 2448)
 {
        pixmap.fill(QColor("black").rgba());
 }
@@ -20,7 +20,6 @@ QPixmap ImageProvider::requestPixmap ( const QString& id, QSize* size, const QSi
 void ImageProvider::capturedImage(std::shared_ptr<QPixmap> image)
 {
     //FIXME avoid copy here
-    //FIXME add thread protection
     const std::lock_guard<std::mutex> lock(pixmapMutex);
     pixmap = *image;
 }

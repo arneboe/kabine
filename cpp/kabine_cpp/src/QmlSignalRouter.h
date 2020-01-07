@@ -10,9 +10,16 @@ class QmlSignalRouter : public QObject
     
 public slots:
     void imageClicked();
+    void printPicClicked();
+    void takePicClicked();
+    void deletePicClicked();
     
 signals:
     void imageClickedSignal();
+    void printPicClickedSignal();
+    void takePicClickedSignal();
+    void deletePicClickedSignal();
+    
 
 };
 

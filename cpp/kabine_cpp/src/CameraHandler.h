@@ -16,6 +16,7 @@ public slots:
     void triggerCapture();
     void triggerPreviewStreaming();
     void stopPreviewStreaming();
+    void start();
 signals:
     void capturedImage(std::shared_ptr<QPixmap> image);
     
