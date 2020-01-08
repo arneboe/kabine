@@ -18,7 +18,12 @@ public slots:
     void stopPreviewStreaming();
     void start();
 signals:
+    
+    /** Is emitted for both previews and pictures. */
     void capturedImage(std::shared_ptr<QPixmap> image);
+    
+    /** Signals that a real picture was taken */
+    void imageCaptureDone();
     
 private:
     DigitalCamera camera;

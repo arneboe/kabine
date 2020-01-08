@@ -24,6 +24,7 @@ void CameraHandler::triggerCapture()
         
         auto image = camera.captureImage();
         emit capturedImage(image);      
+        emit imageCaptureDone();
         stopPreviewStream = false;
     });
 }

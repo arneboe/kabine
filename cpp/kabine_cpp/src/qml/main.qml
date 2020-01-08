@@ -41,7 +41,44 @@ Window
                 loops: Animation.Infinite;
                 duration: 1000
             }
+            
+            Text {
+                objectName: "take_pic_text"
+                id: take_pic_text
+                text: "Taking Picture"
+                font.family: "Helvetica"
+                font.pointSize: 55
+                font.bold: true
+                color: "white"
+                anchors.centerIn: parent
+                state: "invisible"
+
+                states: [
+                    State {
+                        name: "invisible"
+                        PropertyChanges { target: take_pic_text; opacity: 0 }
+                    },
+
+                    State {
+                        name: "visible"
+                        PropertyChanges { target: take_pic_text; opacity: 1.0 }
+                    }
+                ]
+
+                transitions: Transition {
+                    NumberAnimation { properties: "opacity"; duration: 2000 }
+                }
+
+                function show() {
+                    state = "visible";
+                }
+                function hide() {
+                    state = "invisible";
+                }
+            }
+            
         }
+                
         RowLayout {
             spacing: 200
             Layout.alignment: Qt.AlignCenter
