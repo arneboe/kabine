@@ -60,6 +60,9 @@ private:
     CameraHandler& cameraHandler;
     QObject* takingPictureText;
     QObject* image;
+    QObject* takeButton;
+    QObject* deleteButton;
+    QObject* printButton;
 
 };
 

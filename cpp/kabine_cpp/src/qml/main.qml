@@ -118,6 +118,7 @@ Window
 
             Button {
                 id: print_pic_button
+                enabled: false
                 objectName: "print_pic_button"
                 contentItem: Text {
                     text: qsTr("Print & Delete Picture")
@@ -132,6 +133,7 @@ Window
             
             Button {
                 id: delete_pic_button
+                enabled: false
                 objectName: "delete_pic_button"
                 contentItem: Text {
                     text: qsTr("Delete Picture")

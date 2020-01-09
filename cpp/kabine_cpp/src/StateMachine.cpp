@@ -68,6 +68,9 @@ void StateMachine::streaming()
     //entering state
     if(lastState == Startup || lastState == Deleting || lastState == Printing)
     {
+        deleteButton->setProperty("enabled", false);
+        printButton->setProperty("enabled", false);
+        takeButton->setProperty("enabled", true);
         lastState = Streaming;
         cameraHandler.triggerPreviewStreaming();
     }
@@ -134,6 +137,7 @@ void StateMachine::taking()
         //Show text while we wait for the picture
         QMetaObject::invokeMethod(takingPictureText, "show");
         QMetaObject::invokeMethod(image, "hide");
+        takeButton->setProperty("enabled", false);
         cameraHandler.triggerCapture();
     }
     else if(lastState == Taking)
@@ -144,6 +148,8 @@ void StateMachine::taking()
             currentEvent = Event::Invalid_Event;
             QMetaObject::invokeMethod(takingPictureText, "hide");
             QMetaObject::invokeMethod(image, "show");
+            deleteButton->setProperty("enabled", true);
+            printButton->setProperty("enabled", true);
             //switch to displaying
             currentState = Displaying;
             iterate();
@@ -165,6 +171,10 @@ void StateMachine::startup()
     
     takingPictureText = rootGuiElement->findChild<QQuickItem*>("take_pic_text");
     image = rootGuiElement->findChild<QQuickItem*>("image_viewer");
+    takeButton = rootGuiElement->findChild<QQuickItem*>("take_pic_button");
+    deleteButton = rootGuiElement->findChild<QQuickItem*>("print_pic_button");
+    printButton = rootGuiElement->findChild<QQuickItem*>("delete_pic_button");
+    
     
     
     QQuickItem* takePicButton = rootGuiElement->findChild<QQuickItem*>("take_pic_button");
