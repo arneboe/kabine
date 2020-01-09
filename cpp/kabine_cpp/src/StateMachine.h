@@ -59,6 +59,7 @@ private:
     QObject* rootGuiElement;
     CameraHandler& cameraHandler;
     QObject* takingPictureText;
+    QObject* image;
 
 };
 

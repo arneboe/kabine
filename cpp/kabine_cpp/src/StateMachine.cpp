@@ -133,6 +133,7 @@ void StateMachine::taking()
         
         //Show text while we wait for the picture
         QMetaObject::invokeMethod(takingPictureText, "show");
+        QMetaObject::invokeMethod(image, "hide");
         cameraHandler.triggerCapture();
     }
     else if(lastState == Taking)
@@ -142,6 +143,7 @@ void StateMachine::taking()
         {
             currentEvent = Event::Invalid_Event;
             QMetaObject::invokeMethod(takingPictureText, "hide");
+            QMetaObject::invokeMethod(image, "show");
             //switch to displaying
             currentState = Displaying;
             iterate();
@@ -162,6 +164,7 @@ void StateMachine::startup()
     lastState = Startup;
     
     takingPictureText = rootGuiElement->findChild<QQuickItem*>("take_pic_text");
+    image = rootGuiElement->findChild<QQuickItem*>("image_viewer");
     
     
     QQuickItem* takePicButton = rootGuiElement->findChild<QQuickItem*>("take_pic_button");

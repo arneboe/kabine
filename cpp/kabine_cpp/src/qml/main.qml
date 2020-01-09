@@ -11,6 +11,42 @@ Window
     width: 800
     height: 600
     visibility: Window.Maximized
+    color: "black"
+
+    Text {
+        objectName: "take_pic_text"
+        id: take_pic_text
+        text: "Taking Picture"
+        font.family: "Helvetica"
+        font.pointSize: 55
+        font.bold: true
+        color: "white"
+        anchors.centerIn: parent
+        state: "invisible"
+
+        states: [
+            State {
+                name: "invisible"
+                PropertyChanges { target: take_pic_text; opacity: 0 }
+            },
+
+            State {
+                name: "visible"
+                PropertyChanges { target: take_pic_text; opacity: 1.0 }
+            }
+        ]
+
+        transitions: Transition {
+            NumberAnimation { properties: "opacity"; duration: 600 }
+        }
+
+        function show() {
+            state = "visible";
+        }
+        function hide() {
+            state = "invisible";
+        }
+    }
     
     ColumnLayout {
         spacing: 2
@@ -29,54 +65,38 @@ Window
             property int currentFrameNumber: 0
             source: "image://capture_provider/image" + currentFrameNumber
             signal imageClicked()
+
+            state: "visible"
             
-            MouseArea {
-                anchors.fill: parent
-                onClicked: image_viewer.imageClicked()
+            states: [
+                State {
+                    name: "invisible"
+                    PropertyChanges { target: image_viewer; opacity: 0 }
+                },
+
+                State {
+                    name: "visible"
+                    PropertyChanges { target: image_viewer; opacity: 1.0 }
+                }
+            ]    
+            
+            transitions: Transition {
+                NumberAnimation { properties: "opacity"; duration: 600 }
             }
             
+            function show() {
+                state = "visible";
+            }
+            function hide() {
+                state = "invisible";
+            }
+
             NumberAnimation on currentFrameNumber {
                 from: 0;
                 to: 25;
                 loops: Animation.Infinite;
                 duration: 1000
             }
-            
-            Text {
-                objectName: "take_pic_text"
-                id: take_pic_text
-                text: "Taking Picture"
-                font.family: "Helvetica"
-                font.pointSize: 55
-                font.bold: true
-                color: "white"
-                anchors.centerIn: parent
-                state: "invisible"
-
-                states: [
-                    State {
-                        name: "invisible"
-                        PropertyChanges { target: take_pic_text; opacity: 0 }
-                    },
-
-                    State {
-                        name: "visible"
-                        PropertyChanges { target: take_pic_text; opacity: 1.0 }
-                    }
-                ]
-
-                transitions: Transition {
-                    NumberAnimation { properties: "opacity"; duration: 2000 }
-                }
-
-                function show() {
-                    state = "visible";
-                }
-                function hide() {
-                    state = "invisible";
-                }
-            }
-            
         }
                 
         RowLayout {
