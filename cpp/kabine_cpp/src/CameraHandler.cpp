@@ -23,6 +23,7 @@ void CameraHandler::triggerCapture()
         const std::lock_guard<std::mutex> lock(cameraMutex);
         
         auto image = camera.captureImage();
+        emit highResImageCaptured(image);
         emit capturedImage(image);      
         emit imageCaptureDone();
         stopPreviewStream = false;

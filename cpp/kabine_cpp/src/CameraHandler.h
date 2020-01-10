@@ -22,6 +22,9 @@ signals:
     /** Is emitted for both previews and pictures. */
     void capturedImage(std::shared_ptr<QPixmap> image);
     
+    /** Is only emitted for high res pictures, not for previews */
+    void highResImageCaptured(std::shared_ptr<QPixmap> image);
+    
     /** Signals that a real picture was taken */
     void imageCaptureDone();
     

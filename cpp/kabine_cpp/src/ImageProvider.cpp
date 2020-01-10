@@ -23,3 +23,9 @@ void ImageProvider::capturedImage(std::shared_ptr<QPixmap> image)
     const std::lock_guard<std::mutex> lock(pixmapMutex);
     pixmap = *image;
 }
+
+QPixmap ImageProvider::getPixmap()
+{
+    const std::lock_guard<std::mutex> lock(pixmapMutex);
+    return pixmap;
+}

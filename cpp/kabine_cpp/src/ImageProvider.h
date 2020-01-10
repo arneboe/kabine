@@ -12,6 +12,8 @@ public:
     ImageProvider();
     virtual QPixmap requestPixmap ( const QString& id, QSize* size, const QSize& requestedSize );
 
+    QPixmap getPixmap();
+    
 public slots:
     void capturedImage(std::shared_ptr<QPixmap> image);
     

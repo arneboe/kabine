@@ -41,6 +41,7 @@ public slots:
     void printPicturePressed();
     void timerExpired();
     void imageCaptureDone();
+    void highResImageCaptured(std::shared_ptr<QPixmap> pic);
     void start();
     
 private:
@@ -50,6 +51,13 @@ private:
     void startup();
     void streaming();
     void taking();
+    void printing();
+    
+    /**returns the number of lines in 'lpstat' output. This is identical to the number of print jobs running */
+    int lpstatLineCount();
+    
+    /** cancel all queued print jobs */
+    void cancelAllPrintJobs();
     
     std::vector<std::function<void(void)>> stateHandlers;    
     State currentState;
@@ -63,6 +71,9 @@ private:
     QObject* takeButton;
     QObject* deleteButton;
     QObject* printButton;
+    
+    /**Original image in original resolution etc. */
+    std::shared_ptr<QPixmap> capturedImage;
 
 };
 

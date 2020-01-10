@@ -3,6 +3,25 @@
 #include <QQuickWindow>
 #include <QQuickItem>
 #include <QQuickImageProvider>
+#include <QPixmap>
+#include <QThread>
+#include <QPainter>
+#include <cmath>
+
+
+std::string exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
 
 StateMachine::StateMachine(QObject* rootGuiElement, CameraHandler& cameraHandler) : QObject(nullptr),
     rootGuiElement(rootGuiElement), cameraHandler(cameraHandler)
@@ -13,6 +32,7 @@ StateMachine::StateMachine(QObject* rootGuiElement, CameraHandler& cameraHandler
     stateHandlers[State::Streaming] = std::bind(&StateMachine::streaming, this);
     stateHandlers[State::Taking] = std::bind(&StateMachine::taking, this);
     stateHandlers[State::Displaying] = std::bind(&StateMachine::displaying, this);
+    stateHandlers[State::Printing] = std::bind(&StateMachine::printing, this);
     currentState = Startup;
     lastState = Invalid;
     
@@ -42,6 +62,12 @@ void StateMachine::timerExpired()
     iterate();
 }
 
+void StateMachine::highResImageCaptured(std::shared_ptr<QPixmap> pic)
+{
+    capturedImage = pic;
+}
+
+
 void StateMachine::imageCaptureDone()
 {
     currentEvent = Event::Picture_Taken;
@@ -62,6 +88,57 @@ void StateMachine::iterate()
 {
     stateHandlers[currentState]();
 }
+
+int StateMachine::lpstatLineCount()
+{
+    const std::string lpstatResult = exec("lpstat");
+    const int numLines = std::count(lpstatResult.begin(), lpstatResult.end(), '\n');
+    return numLines;
+}
+
+
+void StateMachine::cancelAllPrintJobs()
+{
+    if(lpstatLineCount() > 0)
+    {
+        const int limit = 10;
+        for(int i = 0; i < limit; ++i)
+        {
+            system("cancel -a");
+            QThread::msleep(700);
+            if(lpstatLineCount() == 0)
+                return;
+        }
+        throw std::runtime_error("unable to cancel print jobs!");
+    }
+
+}
+
+
+
+void StateMachine::printing()
+{
+    //paper 100x148
+    
+    //convert aspect ratio to 1.48 (padding left and right with white rectangles)
+    const double targetAspect = 1.48;
+    const double newWidth = targetAspect * capturedImage->height();
+    const int widthDiff2 = int((newWidth - capturedImage->width()) / 2);
+    
+    QPixmap aspectImage(std::ceil(newWidth), capturedImage->height());
+    aspectImage.fill(Qt::white);
+    QPainter p(&aspectImage);      
+    p.drawImage(widthDiff2, 0, capturedImage->toImage());
+    p.end();
+    
+    aspectImage.save("/home/pi/ramdisk/image_conv.bmp");
+    
+    //sometimes print jobs get stuck (when we run out of paper, or other bugs happen).
+    //cancel all old print jobs before printing
+    cancelAllPrintJobs();
+    system("lp /home/pi/ramdisk/image_conv.bmp");
+}
+
 
 void StateMachine::streaming()
 {
@@ -107,12 +184,15 @@ void StateMachine::displaying()
         }
         else if(currentEvent == Event::Print_Picture_Pressed)
         {
+            currentEvent = Event::Invalid_Event;
+            currentState = Printing;
+            iterate();
         }
         else if(currentEvent == Event::Delete_Picture_Pressed)
         {
             currentEvent = Event::Invalid_Event;
             currentState = Streaming;
-            lastState = Deleting; //HACK deleting state is virtual
+            lastState = Deleting; //NOTE deleting state is virtual
             iterate();
         }
         else
@@ -184,6 +264,7 @@ void StateMachine::startup()
     QObject::connect(printPicButton, SIGNAL(clicked()), this, SLOT(printPicturePressed()));
     QObject::connect(deletePicButton, SIGNAL(clicked()), this, SLOT(deletePicturePressed()));
     QObject::connect(&cameraHandler, SIGNAL(imageCaptureDone()), this, SLOT(imageCaptureDone()));
+    QObject::connect(&cameraHandler, SIGNAL(highResImageCaptured(std::shared_ptr<QPixmap>)), this, SLOT(highResImageCaptured(std::shared_ptr<QPixmap>)));
     
     cameraHandler.start();
     
