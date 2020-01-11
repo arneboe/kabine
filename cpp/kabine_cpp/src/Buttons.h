@@ -29,7 +29,10 @@ private:
     bool printEnabled = true;
     bool takeEnabled = true;
     bool deleteEnabled = true;
-    
     bool running = true;
+    
+    int deleteDebounceStartTime = 0;
+    int printDebounceStartTime = 0;
+    int takeDebounceStartTime = 0;
     
 };

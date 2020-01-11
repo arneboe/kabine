@@ -32,22 +32,38 @@ void Buttons::run()
 {
     while(running)
     {
-        //msleep(50);
-        if(deleteEnabled && digitalRead(15) == LOW)
+        msleep(50);
+        if(deleteEnabled && digitalRead(15) == HIGH)
         {
+            bool stillDown = true;
+            for(int i = 0; i < 10; ++i)
+            {
+                msleep(10);
+                if(digitalRead(15) == LOW)
+                {
+                    stillDown = false;
+                    break;
+                }
+            }
+            if(stillDown)
+            {
+                std::cout << "DOOOOOWN" << std::endl;
+            }
+            
+            
            // emit deletePressed();
-           std::cout << "DELETE" << std::endl;
+//            std::cout << "DELETE" << std::endl;
            // msleep(5000); //a button can only be pressed once every 5 seconds, this is a shitty HACK of course
         }
-        if(printEnabled &&digitalRead(1) == LOW)
+        if(printEnabled &&digitalRead(1) == HIGH)
         {
-            std::cout << "PRINT" << std::endl;
+//             std::cout << "PRINT" << std::endl;
             //emit printPressed();
             //msleep(5000); //a button can only be pressed once every 5 seconds
         }
-        if(takeEnabled && digitalRead(4) == LOW)
+        if(takeEnabled && digitalRead(4) == HIGH)
         {
-            std::cout << "TAKE" << std::endl;
+//             std::cout << "TAKE" << std::endl;
             //emit takePressed();
            // msleep(5000); //a button can only be pressed once every 5 seconds
         }
