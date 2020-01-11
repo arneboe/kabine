@@ -8,6 +8,7 @@
 #include "StateMachine.h"
 #include "ImageProvider.h"
 #include "CameraHandler.h"
+#include "Buttons.h"
 
 Q_DECLARE_METATYPE(std::shared_ptr<QPixmap>);
 
@@ -31,13 +32,17 @@ int main(int argc, char *argv[])
     QObject::connect(&cameraHandler, &CameraHandler::capturedImage,
                      imageProvder, &ImageProvider::capturedImage);
     
-    StateMachine sm(object, cameraHandler);
+    Buttons buttons;
+    buttons.start();
+    
+    StateMachine sm(object, cameraHandler, buttons);
     sm.start();
     
     app.exec();
     
     //if streaming is running while we shutdown we need to stop it
     //otherwise the camera will crash
+    buttons.stopExecution();
     cameraHandler.stopPreviewStreaming();
 
     return 0;

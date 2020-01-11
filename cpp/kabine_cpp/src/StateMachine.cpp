@@ -26,8 +26,8 @@ std::string exec(const char* cmd) {
 }
 
 
-StateMachine::StateMachine(QObject* rootGuiElement, CameraHandler& cameraHandler) : QObject(nullptr),
-    rootGuiElement(rootGuiElement), cameraHandler(cameraHandler)
+StateMachine::StateMachine(QObject* rootGuiElement, CameraHandler& cameraHandler, Buttons& buttons) : QObject(nullptr),
+    rootGuiElement(rootGuiElement), cameraHandler(cameraHandler), buttons(buttons)
 {
     stateHandlers.resize(State::NUM_STATES);
     
@@ -469,6 +469,11 @@ void StateMachine::startup()
     QObject::connect(takePicButton, SIGNAL(clicked()), this, SLOT(takePicturePressed()));
     QObject::connect(printPicButton, SIGNAL(clicked()), this, SLOT(printPicturePressed()));
     QObject::connect(deletePicButton, SIGNAL(clicked()), this, SLOT(deletePicturePressed()));
+    QObject::connect(&buttons, SIGNAL(takePressed()), this, SLOT(takePicturePressed()));
+    QObject::connect(&buttons, SIGNAL(printPressed()), this, SLOT(printPicturePressed()));
+    QObject::connect(&buttons, SIGNAL(deletePressed()), this, SLOT(deletePicturePressed()));
+    
+    
     QObject::connect(&cameraHandler, SIGNAL(imageCaptureDone()), this, SLOT(imageCaptureDone()));
     QObject::connect(&cameraHandler, SIGNAL(highResImageCaptured(std::shared_ptr<QPixmap>)), this, SLOT(highResImageCaptured(std::shared_ptr<QPixmap>)));
     

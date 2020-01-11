@@ -3,6 +3,7 @@
 #include <functional>
 #include "CameraHandler.h"
 #include "ImageProvider.h"
+#include "Buttons.h"
 
 enum State
 {
@@ -36,7 +37,7 @@ class StateMachine : QObject
     Q_OBJECT;
     
 public:
-    StateMachine(QObject* rootGuiElement, CameraHandler& cameraHandler);
+    StateMachine(QObject* rootGuiElement, CameraHandler& cameraHandler, Buttons& buttons);
 
 
 public slots:
@@ -82,6 +83,7 @@ private:
     
     QObject* rootGuiElement;
     CameraHandler& cameraHandler;
+    Buttons& buttons;
     QObject* popupText;
     QObject* image;
     QObject* takeButton;
