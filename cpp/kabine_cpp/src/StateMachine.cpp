@@ -37,6 +37,7 @@ StateMachine::StateMachine(QObject* rootGuiElement, CameraHandler& cameraHandler
     stateHandlers[State::Displaying] = std::bind(&StateMachine::displaying, this);
     stateHandlers[State::Printing] = std::bind(&StateMachine::printing, this);
     stateHandlers[State::Error] = std::bind(&StateMachine::error, this);
+    stateHandlers[State::Deleting] = std::bind(&StateMachine::deleting, this);
     currentState = Startup;
     lastState = Invalid;
     
@@ -103,6 +104,12 @@ int StateMachine::lpstatLineCount()
 void StateMachine::printingDone()
 {
     currentEvent = Event::Printing_Done;
+    iterate();
+}
+
+void StateMachine::deletingDone()
+{
+    currentEvent = Event::Deleting_Done;
     iterate();
 }
 
@@ -261,6 +268,44 @@ void StateMachine::printing()
     }
 }
 
+void StateMachine::deleting()
+{
+    if(lastState == Displaying)
+    {
+        lastState = Deleting;
+        popupText->setProperty("text", "Deleting ...");
+        QMetaObject::invokeMethod(image, "hide");
+        QMetaObject::invokeMethod(popupText, "show");
+        
+        std::thread t([this]
+        {
+            std::this_thread::sleep_for(3s);
+            QMetaObject::invokeMethod(this, "deletingDone");
+            
+        });
+        t.detach();
+        
+    }
+    else if(lastState == Deleting)
+    {
+        if(currentEvent == Event::Deleting_Done)
+        {
+            currentEvent = Event::Invalid_Event;
+            currentState = Streaming;
+            iterate();
+        }
+        else
+        {
+            throw std::runtime_error("illeal event in deleting state");
+        }
+    }
+    else
+    {
+        throw std::runtime_error("Deleting state entered from illiegal state");
+    }
+    
+}
+
 void StateMachine::error()
 {
     popupText->setProperty("text", errorMessage);
@@ -325,8 +370,7 @@ void StateMachine::displaying()
         else if(currentEvent == Event::Delete_Picture_Pressed)
         {
             currentEvent = Event::Invalid_Event;
-            currentState = Streaming;
-            lastState = Deleting; //NOTE deleting state is virtual
+            currentState = Deleting;
             iterate();
         }
         else

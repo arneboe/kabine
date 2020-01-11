@@ -26,6 +26,7 @@ enum class Event
     Picture_Taken,
     Printing_Done,
     Printing_Error,
+    Deleting_Done,
     Invalid_Event
 };
 
@@ -48,6 +49,7 @@ public slots:
     void imageCaptureDone();
     void highResImageCaptured(std::shared_ptr<QPixmap> pic);
     void start();
+    void deletingDone();
     
 private:
     /** run one iteration of the sm */
@@ -57,6 +59,7 @@ private:
     void streaming();
     void taking();
     void printing();
+    void deleting();
     void error();
     
     /**returns the number of lines in 'lpstat' output. This is identical to the number of print jobs running */
