@@ -107,6 +107,12 @@ Window
             function hide() {
                 state = "invisible";
             }
+            
+            function updateTime(secs)
+            {
+                timer_text.text = "Picture will be deleted in " + secs + " seconds!"
+            }
+            
         }
         
         Image {

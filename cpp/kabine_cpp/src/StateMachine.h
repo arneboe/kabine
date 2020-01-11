@@ -73,6 +73,8 @@ private:
     
     void enablePrinter();
     
+    void startDeleteCountdown();
+    
     std::vector<std::function<void(void)>> stateHandlers;    
     State currentState;
     State lastState;
@@ -88,6 +90,8 @@ private:
     QObject* deleteTimerText;
     
     QString errorMessage;
+    
+    bool stopDeleteThread;
     
     /**Original image in original resolution etc. */
     std::shared_ptr<QPixmap> capturedImage;

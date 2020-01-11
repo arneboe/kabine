@@ -351,30 +351,52 @@ void StateMachine::streaming()
     }
 }
 
+void StateMachine::startDeleteCountdown()
+{
+    const int secsTillDelete = 45;
+        
+    QMetaObject::invokeMethod(deleteTimerText, "show");    
+    QMetaObject::invokeMethod(deleteTimerText, "updateTime", Q_ARG(QVariant, secsTillDelete));    
+    
+    stopDeleteThread = false;
+    std::thread t([this, secsTillDelete]
+    {
+        for(int i = secsTillDelete - 1; i > 0; --i)
+        {
+            if(stopDeleteThread)
+            {
+                return;
+            }
+            std::this_thread::sleep_for(1s);
+            QMetaObject::invokeMethod(deleteTimerText, "updateTime", Q_ARG(QVariant, i));    
+        }        
+        QMetaObject::invokeMethod(this, "deleteTimerExpired");
+    });
+    t.detach();
+    
+}
+
 void StateMachine::displaying()
 {
     if(lastState == Taking)
     {
         lastState = Displaying;
-        
-        deleteTimerText->setProperty("text", "Picture will be deleted in 30 seconds");
-        QMetaObject::invokeMethod(deleteTimerText, "show");
+        startDeleteCountdown();
         
     }
     else if(lastState == Displaying)
     {
         //got event
-        if(currentEvent == Event::Display_Time_Expired)
+        if(currentEvent == Event::Print_Picture_Pressed)
         {
-        }
-        else if(currentEvent == Event::Print_Picture_Pressed)
-        {
+            stopDeleteThread = true;
             currentEvent = Event::Invalid_Event;
             currentState = Printing;
             iterate();
         }
-        else if(currentEvent == Event::Delete_Picture_Pressed)
+        else if(currentEvent == Event::Delete_Picture_Pressed || currentEvent == Event::Display_Time_Expired)
         {
+            stopDeleteThread = true;
             currentEvent = Event::Invalid_Event;
             currentState = Deleting;
             iterate();
