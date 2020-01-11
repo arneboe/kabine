@@ -7,7 +7,10 @@
 #include <QThread>
 #include <QPainter>
 #include <cmath>
+#include <thread>
+#include <chrono>
 
+using namespace std::chrono_literals;
 
 std::string exec(const char* cmd) {
     std::array<char, 128> buffer;
@@ -33,6 +36,7 @@ StateMachine::StateMachine(QObject* rootGuiElement, CameraHandler& cameraHandler
     stateHandlers[State::Taking] = std::bind(&StateMachine::taking, this);
     stateHandlers[State::Displaying] = std::bind(&StateMachine::displaying, this);
     stateHandlers[State::Printing] = std::bind(&StateMachine::printing, this);
+    stateHandlers[State::Error] = std::bind(&StateMachine::error, this);
     currentState = Startup;
     lastState = Invalid;
     
@@ -96,6 +100,17 @@ int StateMachine::lpstatLineCount()
     return numLines;
 }
 
+void StateMachine::printingDone()
+{
+    currentEvent = Event::Printing_Done;
+    iterate();
+}
+
+void StateMachine::printingError()
+{
+    currentEvent = Event::Printing_Error;
+    iterate();   
+}
 
 void StateMachine::cancelAllPrintJobs()
 {
@@ -114,29 +129,145 @@ void StateMachine::cancelAllPrintJobs()
 
 }
 
+bool StateMachine::printerEnabled()
+{
+    const std::string result = exec("lpstat -p");
+    return result.find("enabled") != std::string::npos;    
+}
+
+void StateMachine::enablePrinter()
+{
+    if(!printerEnabled())
+    {
+        const int limit = 10;
+        for(int i = 0; i < limit; ++i)
+        {
+            system("cupsenable $(lpstat -d | cut -d: -f2)");
+            QThread::msleep(700);
+            if(printerEnabled())
+                return;
+        }
+        throw std::runtime_error("unable to enable printer");
+    }
+}
+
 
 
 void StateMachine::printing()
 {
-    //paper 100x148
-    
-    //convert aspect ratio to 1.48 (padding left and right with white rectangles)
-    const double targetAspect = 1.48;
-    const double newWidth = targetAspect * capturedImage->height();
-    const int widthDiff2 = int((newWidth - capturedImage->width()) / 2);
-    
-    QPixmap aspectImage(std::ceil(newWidth), capturedImage->height());
-    aspectImage.fill(Qt::white);
-    QPainter p(&aspectImage);      
-    p.drawImage(widthDiff2, 0, capturedImage->toImage());
-    p.end();
-    
-    aspectImage.save("/home/pi/ramdisk/image_conv.bmp");
-    
-    //sometimes print jobs get stuck (when we run out of paper, or other bugs happen).
-    //cancel all old print jobs before printing
-    cancelAllPrintJobs();
-    system("lp /home/pi/ramdisk/image_conv.bmp");
+    if(lastState == Displaying)
+    {
+        lastState = Printing;
+        deleteButton->setProperty("enabled", false);
+        printButton->setProperty("enabled", false);
+        takeButton->setProperty("enabled", false);
+        popupText->setProperty("text", "Printing ...");
+        QMetaObject::invokeMethod(image, "hide");
+        QMetaObject::invokeMethod(popupText, "show");
+        
+        
+        //paper 100x148
+        //convert aspect ratio to 1.48 (padding left and right with white rectangles)
+        const double targetAspect = 1.48;
+        const double newWidth = targetAspect * capturedImage->height();
+        const int widthDiff2 = int((newWidth - capturedImage->width()) / 2);
+        
+        QPixmap aspectImage(std::ceil(newWidth), capturedImage->height());
+        aspectImage.fill(Qt::white);
+        QPainter p(&aspectImage);      
+        p.drawImage(widthDiff2, 0, capturedImage->toImage());
+        p.end();
+        
+        aspectImage.save("/home/pi/ramdisk/image_conv.bmp");
+        
+        
+        //if paper tray was removed the printer is disabled and does not re-enable automatically
+        try
+        {
+            enablePrinter();
+        }
+        catch (std::runtime_error& error)
+        {
+            errorMessage = QString("Printing Error: enable fail");
+            currentState = Error;
+            iterate();
+            return;
+        }
+        
+        //sometimes print jobs get stuck (when we run out of paper, or other bugs happen).
+        //cancel all old print jobs before printing
+        try 
+        {
+            cancelAllPrintJobs();
+        }
+        catch (std::runtime_error& error)
+        {
+            errorMessage = QString("Printing Error: cancel fail");
+            currentState = Error;
+            iterate();
+            return;
+        }
+        system("lp /home/pi/ramdisk/image_conv.bmp");
+        
+        //start a thread to monitor progress
+        
+        std::thread t([this]
+        {
+            auto startTime = std::chrono::steady_clock::now();
+            
+            //give cups time to start printing
+            std::this_thread::sleep_for(5s);
+            while(lpstatLineCount() > 0)
+            {
+                std::this_thread::sleep_for(1s);
+                
+                if((std::chrono::steady_clock::now() - startTime) > 180s)
+                {
+                    QMetaObject::invokeMethod(this, "printingError");
+                    return;
+                }
+                
+            }
+            std::this_thread::sleep_for(15s);
+            QMetaObject::invokeMethod(this, "printingDone");
+            
+        });
+        t.detach();
+        
+    }
+    else if(lastState == Printing)
+    {
+        if(currentEvent == Event::Printing_Done)
+        {
+            currentEvent = Event::Invalid_Event;
+            currentState = Streaming;
+            iterate();
+        }
+        else if(currentEvent == Event::Printing_Error)
+        {
+            errorMessage = QString("Printing Error");
+            currentState = Error;
+            iterate();
+        }
+        else
+        {
+            throw std::runtime_error("illegal event in printing state");
+        }
+    }
+    else
+    {
+        throw std::runtime_error("entered printing from illegal state");
+    }
+}
+
+void StateMachine::error()
+{
+    popupText->setProperty("text", errorMessage);
+    deleteButton->setProperty("enabled", false);
+    printButton->setProperty("enabled", false);
+    takeButton->setProperty("enabled", false);
+    QMetaObject::invokeMethod(image, "hide");
+    QMetaObject::invokeMethod(popupText, "show");
 }
 
 
@@ -145,6 +276,8 @@ void StateMachine::streaming()
     //entering state
     if(lastState == Startup || lastState == Deleting || lastState == Printing)
     {
+        QMetaObject::invokeMethod(image, "show");
+        QMetaObject::invokeMethod(popupText, "hide");
         deleteButton->setProperty("enabled", false);
         printButton->setProperty("enabled", false);
         takeButton->setProperty("enabled", true);
@@ -215,7 +348,8 @@ void StateMachine::taking()
          cameraHandler.stopPreviewStreaming();
         
         //Show text while we wait for the picture
-        QMetaObject::invokeMethod(takingPictureText, "show");
+        popupText->setProperty("text", "Taking Picture");
+        QMetaObject::invokeMethod(popupText, "show");
         QMetaObject::invokeMethod(image, "hide");
         takeButton->setProperty("enabled", false);
         cameraHandler.triggerCapture();
@@ -226,7 +360,7 @@ void StateMachine::taking()
         if(currentEvent == Event::Picture_Taken)
         {
             currentEvent = Event::Invalid_Event;
-            QMetaObject::invokeMethod(takingPictureText, "hide");
+            QMetaObject::invokeMethod(popupText, "hide");
             QMetaObject::invokeMethod(image, "show");
             deleteButton->setProperty("enabled", true);
             printButton->setProperty("enabled", true);
@@ -249,7 +383,7 @@ void StateMachine::startup()
     
     lastState = Startup;
     
-    takingPictureText = rootGuiElement->findChild<QQuickItem*>("take_pic_text");
+    popupText = rootGuiElement->findChild<QQuickItem*>("take_pic_text");
     image = rootGuiElement->findChild<QQuickItem*>("image_viewer");
     takeButton = rootGuiElement->findChild<QQuickItem*>("take_pic_button");
     deleteButton = rootGuiElement->findChild<QQuickItem*>("print_pic_button");

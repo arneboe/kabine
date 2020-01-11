@@ -13,7 +13,8 @@ enum State
     Deleting = 4,
     Printing = 5,
     Invalid = 6,
-    NUM_STATES = 7
+    Error = 7,
+    NUM_STATES = 8
 };
 
 enum class Event
@@ -23,6 +24,8 @@ enum class Event
     Delete_Picture_Pressed,
     Display_Time_Expired,
     Picture_Taken,
+    Printing_Done,
+    Printing_Error,
     Invalid_Event
 };
 
@@ -39,6 +42,8 @@ public slots:
     void takePicturePressed();
     void deletePicturePressed();
     void printPicturePressed();
+    void printingDone();
+    void printingError();
     void timerExpired();
     void imageCaptureDone();
     void highResImageCaptured(std::shared_ptr<QPixmap> pic);
@@ -52,12 +57,18 @@ private:
     void streaming();
     void taking();
     void printing();
+    void error();
     
     /**returns the number of lines in 'lpstat' output. This is identical to the number of print jobs running */
     int lpstatLineCount();
     
     /** cancel all queued print jobs */
     void cancelAllPrintJobs();
+    
+    /** check if the default printer is enabled */
+    bool printerEnabled();
+    
+    void enablePrinter();
     
     std::vector<std::function<void(void)>> stateHandlers;    
     State currentState;
@@ -66,11 +77,13 @@ private:
     
     QObject* rootGuiElement;
     CameraHandler& cameraHandler;
-    QObject* takingPictureText;
+    QObject* popupText;
     QObject* image;
     QObject* takeButton;
     QObject* deleteButton;
     QObject* printButton;
+    
+    QString errorMessage;
     
     /**Original image in original resolution etc. */
     std::shared_ptr<QPixmap> capturedImage;
