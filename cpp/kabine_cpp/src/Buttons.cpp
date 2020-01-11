@@ -1,16 +1,16 @@
 #include "Buttons.h"
 #include <wiringPi.h>
-
+#include <iostream>
 
 Buttons::Buttons()
 {
     wiringPiSetup() ;
-    pinMode(8, INPUT);
-    pinMode(12, INPUT);
-    pinMode(16, INPUT);
-    pullUpDnControl(8, PUD_DOWN);
-    pullUpDnControl(12, PUD_DOWN);
-    pullUpDnControl(16, PUD_DOWN);
+    pinMode(15, INPUT);
+    pinMode(1, INPUT);
+    pinMode(4, INPUT);
+    pullUpDnControl(15, PUD_DOWN);
+    pullUpDnControl(1, PUD_DOWN);
+    pullUpDnControl(4, PUD_DOWN);
 }
 
 void Buttons::enableDeleteButton(const bool enabled)
@@ -32,22 +32,26 @@ void Buttons::run()
 {
     while(running)
     {
-        msleep(50);
-        if(deleteEnabled && digitalRead(8) == LOW)
+        //msleep(50);
+        if(deleteEnabled && digitalRead(15) == LOW)
         {
-            emit deletePressed();
-            msleep(5000); //a button can only be pressed once every 5 seconds, this is a shitty HACK of course
+           // emit deletePressed();
+           std::cout << "DELETE" << std::endl;
+           // msleep(5000); //a button can only be pressed once every 5 seconds, this is a shitty HACK of course
         }
-        if(printEnabled &&digitalRead(12) == LOW)
+        if(printEnabled &&digitalRead(1) == LOW)
         {
-            emit printPressed();
-            msleep(5000); //a button can only be pressed once every 5 seconds
+            std::cout << "PRINT" << std::endl;
+            //emit printPressed();
+            //msleep(5000); //a button can only be pressed once every 5 seconds
         }
-        if(takeEnabled && digitalRead(16) == LOW)
+        if(takeEnabled && digitalRead(4) == LOW)
         {
-            emit takePressed();
-            msleep(5000); //a button can only be pressed once every 5 seconds
+            std::cout << "TAKE" << std::endl;
+            //emit takePressed();
+           // msleep(5000); //a button can only be pressed once every 5 seconds
         }
+ 
     }
 }
 
