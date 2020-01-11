@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.9
 import QtQuick.Window 2.3
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.0
@@ -10,9 +10,27 @@ Window
     visible: true
     width: 800
     height: 600
-    visibility: Window.Maximized
+    visibility: Window.FullScreen
     color: "black"
 
+    function toggleFullscreen() {
+        if (main_window.visibility == Window.FullScreen)
+        {
+            main_window.showMaximized();
+        }
+        else
+        {
+            main_window.showFullScreen();
+        }
+    }
+    
+    Shortcut {
+        sequence: "Ctrl+f"
+        onActivated: main_window.toggleFullscreen()
+        
+    }
+    
+    
     Text {
         objectName: "take_pic_text"
         id: take_pic_text

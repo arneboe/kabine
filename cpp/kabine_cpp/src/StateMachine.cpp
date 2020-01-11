@@ -228,6 +228,7 @@ void StateMachine::printing()
                 }
                 
             }
+            //printer reports ready approx. 15 seconds before printing is acutally done...
             std::this_thread::sleep_for(15s);
             QMetaObject::invokeMethod(this, "printingDone");
             
