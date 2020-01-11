@@ -3,7 +3,10 @@
 
 class Buttons : public QThread
 {
+    Q_OBJECT
 public:
+    
+    
     
     Buttons();
     

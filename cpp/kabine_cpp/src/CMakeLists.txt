@@ -19,5 +19,5 @@ add_definitions(${Qt5Widgets_DEFINITIONS} ${QtQml_DEFINITIONS} ${${Qt5Quick_DEFI
     
 add_executable(kabine_cpp main.cpp ${kabine_cpp_SRCS} ${SRC_FILES})
 qt5_use_modules(kabine_cpp Quick Core Gui Widgets )
-target_link_libraries(kabine_cpp ${GP2_LIBRARIES} Qt5::Qml Qt5::Gui Qt5::Quick pthread wiringpi)
+target_link_libraries(kabine_cpp ${GP2_LIBRARIES} Qt5::Qml Qt5::Gui Qt5::Quick pthread wiringPi)
 
