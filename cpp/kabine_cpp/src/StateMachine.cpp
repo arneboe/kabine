@@ -61,7 +61,7 @@ void StateMachine::takePicturePressed()
     iterate();
 }
 
-void StateMachine::timerExpired()
+void StateMachine::deleteTimerExpired()
 {
     currentEvent = Event::Display_Time_Expired;
     iterate();
@@ -171,6 +171,7 @@ void StateMachine::printing()
         popupText->setProperty("text", "Printing ...");
         QMetaObject::invokeMethod(image, "hide");
         QMetaObject::invokeMethod(popupText, "show");
+        QMetaObject::invokeMethod(deleteTimerText, "hide");
         
         
         //paper 100x148
@@ -275,6 +276,7 @@ void StateMachine::deleting()
         lastState = Deleting;
         popupText->setProperty("text", "Deleting ...");
         QMetaObject::invokeMethod(image, "hide");
+        QMetaObject::invokeMethod(deleteTimerText, "hide");
         QMetaObject::invokeMethod(popupText, "show");
         
         std::thread t([this]
@@ -354,6 +356,10 @@ void StateMachine::displaying()
     if(lastState == Taking)
     {
         lastState = Displaying;
+        
+        deleteTimerText->setProperty("text", "Picture will be deleted in 30 seconds");
+        QMetaObject::invokeMethod(deleteTimerText, "show");
+        
     }
     else if(lastState == Displaying)
     {
@@ -433,9 +439,8 @@ void StateMachine::startup()
     takeButton = rootGuiElement->findChild<QQuickItem*>("take_pic_button");
     deleteButton = rootGuiElement->findChild<QQuickItem*>("print_pic_button");
     printButton = rootGuiElement->findChild<QQuickItem*>("delete_pic_button");
-    
-    
-    
+    deleteTimerText = rootGuiElement->findChild<QQuickItem*>("timer_text");
+        
     QQuickItem* takePicButton = rootGuiElement->findChild<QQuickItem*>("take_pic_button");
     QQuickItem* printPicButton = rootGuiElement->findChild<QQuickItem*>("print_pic_button");
     QQuickItem* deletePicButton = rootGuiElement->findChild<QQuickItem*>("delete_pic_button");

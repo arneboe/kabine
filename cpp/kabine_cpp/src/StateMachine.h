@@ -45,7 +45,7 @@ public slots:
     void printPicturePressed();
     void printingDone();
     void printingError();
-    void timerExpired();
+    void deleteTimerExpired();
     void imageCaptureDone();
     void highResImageCaptured(std::shared_ptr<QPixmap> pic);
     void start();
@@ -85,6 +85,7 @@ private:
     QObject* takeButton;
     QObject* deleteButton;
     QObject* printButton;
+    QObject* deleteTimerText;
     
     QString errorMessage;
     

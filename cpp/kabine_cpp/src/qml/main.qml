@@ -30,6 +30,7 @@ Window
         
     }
     
+        
     
     Text {
         objectName: "take_pic_text"
@@ -69,6 +70,45 @@ Window
     ColumnLayout {
         spacing: 2
         anchors.fill: parent
+        
+        
+        
+        Text {
+            objectName: "timer_text"
+            id: timer_text
+            text: "Picture will be deleted in 30 seconds"
+            font.family: "Helvetica"
+            font.pointSize: 22
+            font.bold: true
+            color: "white"
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            state: "invisible"
+
+            states: [
+                State {
+                    name: "invisible"
+                    PropertyChanges { target: timer_text; opacity: 0 }
+                },
+
+                State {
+                    name: "visible"
+                    PropertyChanges { target: timer_text; opacity: 1.0 }
+                }
+            ]
+
+            transitions: Transition {
+                NumberAnimation { properties: "opacity"; duration: 600 }
+            }
+
+            function show() {
+                state = "visible";
+            }
+            function hide() {
+                state = "invisible";
+            }
+        }
+        
         Image {
             width: parent.width
             height: parent.height
