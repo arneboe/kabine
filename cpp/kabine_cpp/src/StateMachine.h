@@ -63,6 +63,10 @@ private:
     void deleting();
     void error();
     
+    void enablePrintButton(bool enabled);
+    void enableDeleteButton(bool enabled);
+    void enableTakeButton(bool enabled);
+    
     /**returns the number of lines in 'lpstat' output. This is identical to the number of print jobs running */
     int lpstatLineCount();
     

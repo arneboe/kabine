@@ -165,9 +165,9 @@ void StateMachine::printing()
     if(lastState == Displaying)
     {
         lastState = Printing;
-        deleteButton->setProperty("enabled", false);
-        printButton->setProperty("enabled", false);
-        takeButton->setProperty("enabled", false);
+        enableDeleteButton( false);
+        enablePrintButton(false);
+        enableTakeButton( false);
         popupText->setProperty("text", "Printing ...");
         QMetaObject::invokeMethod(image, "hide");
         QMetaObject::invokeMethod(popupText, "show");
@@ -311,9 +311,9 @@ void StateMachine::deleting()
 void StateMachine::error()
 {
     popupText->setProperty("text", errorMessage);
-    deleteButton->setProperty("enabled", false);
-    printButton->setProperty("enabled", false);
-    takeButton->setProperty("enabled", false);
+    enableDeleteButton( false);
+    enablePrintButton( false);
+    enableTakeButton( false);
     QMetaObject::invokeMethod(image, "hide");
     QMetaObject::invokeMethod(popupText, "show");
 }
@@ -326,9 +326,9 @@ void StateMachine::streaming()
     {
         QMetaObject::invokeMethod(image, "show");
         QMetaObject::invokeMethod(popupText, "hide");
-        deleteButton->setProperty("enabled", false);
-        printButton->setProperty("enabled", false);
-        takeButton->setProperty("enabled", true);
+        enableDeleteButton( false);
+        enablePrintButton( false);
+        enableTakeButton( true);
         lastState = Streaming;
         cameraHandler.triggerPreviewStreaming();
     }
@@ -424,7 +424,7 @@ void StateMachine::taking()
         popupText->setProperty("text", "Taking Picture");
         QMetaObject::invokeMethod(popupText, "show");
         QMetaObject::invokeMethod(image, "hide");
-        takeButton->setProperty("enabled", false);
+        enableTakeButton( false);
         cameraHandler.triggerCapture();
     }
     else if(lastState == Taking)
@@ -435,8 +435,8 @@ void StateMachine::taking()
             currentEvent = Event::Invalid_Event;
             QMetaObject::invokeMethod(popupText, "hide");
             QMetaObject::invokeMethod(image, "show");
-            deleteButton->setProperty("enabled", true);
-            printButton->setProperty("enabled", true);
+            enableDeleteButton( true);
+            enablePrintButton( true);
             //switch to displaying
             currentState = Displaying;
             iterate();
@@ -485,5 +485,21 @@ void StateMachine::startup()
 }
 
 
+void StateMachine::enablePrintButton(bool enabled)
+{
+    printButton->setProperty("enabled", enabled);
+    buttons.enablePrintButton(enabled);
+}
 
+void StateMachine::enableDeleteButton(bool enabled)
+{
+    deleteButton->setProperty("enabled", enabled);
+    buttons.enableDeleteButton(enabled);
+}
+
+void StateMachine::enableTakeButton(bool enabled)
+{
+    takeButton->setProperty("enabled", enabled);
+    buttons.enableTakeButton(enabled);
+}
 
